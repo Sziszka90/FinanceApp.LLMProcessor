@@ -47,7 +47,7 @@ async def handle_prompt(prompt: str, correlation_id: str, routing_key: str):
             "prompt": prompt,
             "response": response
         }
-        publish_to_topic(message, routing_key=routing_key)
+        publish_to_topic(routing_key, message)
     except Exception as e:
         error_message = {
             "id": correlation_id,
@@ -55,5 +55,5 @@ async def handle_prompt(prompt: str, correlation_id: str, routing_key: str):
             "prompt": prompt,
             "error": str(e)
         }
-        publish_to_topic(error_message, routing_key=routing_key)
+        publish_to_topic(routing_key, error_message)
         print(f"[ERROR] Failed to process LLM request {correlation_id}: {e}")
