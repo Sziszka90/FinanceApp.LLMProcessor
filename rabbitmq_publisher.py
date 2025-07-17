@@ -5,7 +5,7 @@ import json
 RABBITMQ_HOST = os.getenv("RABBITMQ_HOST", "localhost")
 RABBITMQ_USER = os.getenv("RABBITMQ_USER", "guest")
 RABBITMQ_PASS = os.getenv("RABBITMQ_PASS", "guest")
-RABBITMQ_PORT = int(os.getenv("RABBITMQ_PORT", "5672"))
+RABBITMQ_PORT = int(os.getenv("RABBITMQ_PORT", 5672))
 RABBITMQ_VHOST = os.getenv("RABBITMQ_VHOST", "/")
 EXCHANGE_NAME = os.getenv("RABBITMQ_TOPIC_EXCHANGE_NAME", "llm_processor_exchange")
 RABBITMQ_QUEUE_NAME = os.getenv("RABBITMQ_QUEUE_NAME", "llm_processor_queue")
