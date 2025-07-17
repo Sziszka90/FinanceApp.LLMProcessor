@@ -14,7 +14,7 @@ def publish_to_topic(routing_key: str, message: dict):
             virtual_host=os.getenv("RABBITMQ_VHOST", "/"),
             credentials=pika.PlainCredentials(
                 username=os.getenv("RABBITMQ_USER", "guest"),
-                password=os.getenv("RABBITMQ_PASSWORD", "guest")
+                password=os.getenv("RABBITMQ_PASS", "guest")
             )
         )
     )
