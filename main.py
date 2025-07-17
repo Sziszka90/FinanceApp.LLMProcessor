@@ -8,7 +8,7 @@ from rabbitmq_publisher import publish_to_topic
 
 app = FastAPI()
 
-MATCH_TRANSACTION_ROUTING_KEY = os.getenv("MATCH_TRANSACTION_ROUTING_KEY", "financeapp.transaction-match")
+MATCH_TRANSACTION_ROUTING_KEY = os.getenv("MATCH_TRANSACTION_ROUTING_KEY", "financeapp.transactions.matched")
 API_TOKEN = os.getenv("API_TOKEN", "your-secret-token")
 
 def validate_token(authorization: str = Header(...)):
@@ -31,27 +31,29 @@ async def process_prompt(
         )
         correlation_id = str(uuid.uuid4())
         routing_key = MATCH_TRANSACTION_ROUTING_KEY
-        background_tasks.add_task(handle_prompt, prompt, correlation_id, routing_key)
+        background_tasks.add_task(handle_prompt, prompt, correlation_id, routing_key, request.user_id)
 
         return {"status": "success", "correlation_id": correlation_id, "message": "Request received and will be processed"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return {"status": "error", "correlation_id": correlation_id, "message": str(e)}
 
 
-async def handle_prompt(prompt: str, correlation_id: str, routing_key: str):
+async def handle_prompt(prompt: str, correlation_id: str, routing_key: str, user_id: str = None):
     try:
         response = await get_llm_response(prompt)
         message = {
-            "id": correlation_id,
+            "correlation_id": correlation_id,
             "success": True,
+            "user_id": user_id,
             "prompt": prompt,
             "response": response
         }
-        publish_to_topic(routing_key, message)
+        publish_to_topic(routing_key, message, )
     except Exception as e:
         error_message = {
-            "id": correlation_id,
+            "correlation_id": correlation_id,
             "success": False,
+            "user_id": user_id,
             "prompt": prompt,
             "error": str(e)
         }
