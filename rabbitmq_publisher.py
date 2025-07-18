@@ -4,18 +4,25 @@ import pika
 import os
 import json
 
+# Exchanges (comma-separated)
+RABBITMQ_TOPIC_EXCHANGES="financeapp.llm.topic"
+# Queues (comma-separated)
+RABBITMQ_QUEUES="financeapp.transactions.queue"
+# Bindings (JSON array of objects)
+RABBITMQ_BINDINGS='[{"exchange": "financeapp.llm.topic", "queue": "financeapp.transactions.queue", "routing_key": "financeapp.transactions.*"}]'
+
+
 
 # Example configuration: lists of exchanges, queues, and bindings
-EXCHANGES = [e.strip() for e in os.getenv("RABBITMQ_TOPIC_EXCHANGES", "financeapp.llm.topic").split(",")]
-QUEUES = [q.strip() for q in os.getenv("RABBITMQ_QUEUES", "financeapp.transactions.queue").split(",")]
+EXCHANGES = [e.strip() for e in RABBITMQ_TOPIC_EXCHANGES.split(",")]
+QUEUES = [q.strip() for q in RABBITMQ_QUEUES.split(",")]
 
 # Parse bindings from JSON env var
-BINDINGS_JSON = os.getenv("RABBITMQ_BINDINGS", '[{"exchange": "financeapp.llm.topic", "queue": "financeapp.transactions.queue", "routing_key": "financeapp.transactions.*"}]')
-BINDINGS = json.loads(BINDINGS_JSON)
+BINDINGS = json.loads(RABBITMQ_BINDINGS)
 
 RABBITMQ_HOST = os.getenv("RABBITMQ_HOST", "localhost")
 RABBITMQ_PORT = int(os.getenv("RABBITMQ_PORT", 5672))
-RABBITMQ_VHOST = os.getenv("RABBITMQ_VHOST", "/")
+RABBITMQ_VHOST = "/"
 RABBITMQ_USER = os.getenv("RABBITMQ_USER", "guest")
 RABBITMQ_PASS = os.getenv("RABBITMQ_PASS", "guest")
 
