@@ -62,5 +62,4 @@ jobs:
               RABBITMQ_PORT='${{ vars.RABBITMQ_PORT }}' \
               RABBITMQ_USER='${{ secrets.RABBITMQ_USER }}' \
               RABBITMQ_PASS='${{ secrets.RABBITMQ_PASS }}' \
-              RABBITMQ_VHOST='${{ vars.RABBITMQ_VHOST }}' \
               API_TOKEN='${{ secrets.API_TOKEN }}' \
