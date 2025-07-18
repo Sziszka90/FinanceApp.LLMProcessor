@@ -27,7 +27,7 @@ async def handle_prompt(
             "prompt": prompt,
             "error": str(e)
         }
-        publish(routing_key, error_message)
+        publish(exchange, routing_key, error_message)
         print(f"[ERROR] Failed to process LLM request {correlation_id}: {e}")
 
 async def process_prompt(

@@ -60,10 +60,7 @@ jobs:
               LLM_API_KEY='${{ secrets.LLM_API_KEY }}' \
               RABBITMQ_HOST='${{ vars.RABBITMQ_HOST }}' \
               RABBITMQ_PORT='${{ vars.RABBITMQ_PORT }}' \
+              RABBITMQ_VHOST='${{ vars.RABBITMQ_VHOST }}' \
               RABBITMQ_USER='${{ secrets.RABBITMQ_USER }}' \
               RABBITMQ_PASS='${{ secrets.RABBITMQ_PASS }}' \
-              RABBITMQ_VHOST='${{ vars.RABBITMQ_VHOST }}' \
-              RABBITMQ_TOPIC_EXCHANGE_NAME='${{ vars.RABBITMQ_TOPIC_EXCHANGE_NAME }}' \
-              RABBITMQ_QUEUE_NAME='${{ vars.RABBITMQ_QUEUE_NAME }}' \
-              MATCH_TRANSACTION_ROUTING_KEY='${{ vars.MATCH_TRANSACTION_ROUTING_KEY }}' \
               API_TOKEN='${{ secrets.API_TOKEN }}' \
