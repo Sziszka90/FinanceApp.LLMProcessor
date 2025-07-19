@@ -1,0 +1,30 @@
+{
+  "RabbitMqSettings": {
+    "HostName": "localhost",
+    "UserName": "admin",
+    "Password": "Secret12345!",
+    "Port": 5672,
+    "Exchanges": [
+      {
+        "ExchangeName": "financeapp.llm.topic",
+        "ExchangeType": "topic"
+      }
+    ],
+    "Queues": [
+      "financeapp.transactions.queue"
+    ],
+    "RoutingKeys": {
+      "TransactionsMatched": {
+        "ExchangeName": "financeapp.llm.topic",
+        "RoutingKey": "financeapp.transactions.matched"
+      }
+    },
+    "Bindings": [
+      {
+        "Exchange": "financeapp.llm.topic",
+        "Queue": "financeapp.transactions.queue",
+        "RoutingKey": "financeapp.transactions.*"
+      }
+    ]
+  }
+}

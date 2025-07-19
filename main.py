@@ -2,9 +2,10 @@ import os
 import uuid
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, status
 from fastapi.params import Header
-from llm_service import get_matched_transactions_prompt
-from models import MatchTransactionRequest
-from prompt_tasks import process_prompt
+from services.llm_service import get_matched_transactions_prompt
+from models.MatchTransactionRequest import MatchTransactionRequest
+from tasks.prompt_tasks import process_prompt
+from rabbitmq_publisher import rabbitmq_config
 
 app = FastAPI()
 
@@ -28,6 +29,6 @@ async def match_transactions_endpoint(
         get_matched_transactions_prompt(request.transaction_names, request.transaction_group_names), 
         request.user_id, 
         str(uuid.uuid4()),
-        "financeapp.transactions.matched",
-        "financeapp.llm.topic",
+        rabbitmq_config.RabbitMqSettings.RoutingKeys.TransactionsMatched.RoutingKey,
+        rabbitmq_config.RabbitMqSettings.RoutingKeys.TransactionsMatched.ExchangeName,
         background_tasks)

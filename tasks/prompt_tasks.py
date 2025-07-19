@@ -1,5 +1,5 @@
 from fastapi import BackgroundTasks
-from llm_service import get_llm_response
+from services.llm_service import get_llm_response
 from rabbitmq_publisher import publish
 
 async def handle_prompt(

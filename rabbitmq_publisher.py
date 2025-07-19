@@ -1,54 +1,43 @@
 
 # rabbitmq_publisher.py
 
+from types import SimpleNamespace
 import pika
-import os
 import json
 
+with open("rabbitmq_config.json", "r") as f:
+    rabbitmq_config = json.load(f, object_hook=lambda d: SimpleNamespace(**d))
+
 def initialize_rabbitmq():
-    RABBITMQ_TOPIC_EXCHANGES='[{"exchange": "financeapp.llm.topic", "exchange_type": "topic"}]'
-    RABBITMQ_QUEUES='[{"queue": "financeapp.transactions.queue"}]'
-    RABBITMQ_BINDINGS='[{"exchange": "financeapp.llm.topic", "queue": "financeapp.transactions.queue", "routing_key": "financeapp.transactions.*"}]'
-    EXCHANGES = json.loads(RABBITMQ_TOPIC_EXCHANGES)
-    QUEUES = [q["queue"] for q in json.loads(RABBITMQ_QUEUES)]
-    BINDINGS = json.loads(RABBITMQ_BINDINGS)
-    RABBITMQ_HOST = os.getenv("RABBITMQ_HOST", "localhost")
-    RABBITMQ_PORT = int(os.getenv("RABBITMQ_PORT", 5672))
-    RABBITMQ_VHOST = "/"
-    RABBITMQ_USER = os.getenv("RABBITMQ_USER", "guest")
-    RABBITMQ_PASS = os.getenv("RABBITMQ_PASS", "guest")
-
-
     global connection, channel
     connection = pika.BlockingConnection(
         pika.ConnectionParameters(
-            host=RABBITMQ_HOST,
-            port=RABBITMQ_PORT,
-            virtual_host=RABBITMQ_VHOST,
+            host=rabbitmq_config.RabbitMqSettings.HostName,
+            port=rabbitmq_config.RabbitMqSettings.Port,
+            virtual_host="/",
             credentials=pika.PlainCredentials(
-                username=RABBITMQ_USER,
-                password=RABBITMQ_PASS
+                username=rabbitmq_config.RabbitMqSettings.UserName,
+                password=rabbitmq_config.RabbitMqSettings.Password
             )
         )
     )
     channel = connection.channel()
 
-
-    for exchange_obj in EXCHANGES:
+    for exchange in rabbitmq_config.RabbitMqSettings.Exchanges:
         channel.exchange_declare(
-            exchange=exchange_obj["exchange"],
-            exchange_type=exchange_obj["exchange_type"],
+            exchange=exchange.ExchangeName,
+            exchange_type=exchange.ExchangeType,
             durable=True
         )
 
-    for queue in QUEUES:
+    for queue in rabbitmq_config.RabbitMqSettings.Queues:
         channel.queue_declare(queue=queue, durable=True)
 
-    for binding in BINDINGS:
+    for binding in rabbitmq_config.RabbitMqSettings.Bindings:
         channel.queue_bind(
-            exchange=binding["exchange"],
-            queue=binding["queue"],
-            routing_key=binding["routing_key"]
+            exchange=binding.Exchange,
+            queue=binding.Queue,
+            routing_key=binding.RoutingKey
         )
 
 
