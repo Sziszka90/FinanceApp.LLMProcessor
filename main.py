@@ -1,13 +1,19 @@
 import os
 import uuid
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, status
+from fastapi.concurrency import asynccontextmanager
 from fastapi.params import Header
 from services.llm_service import get_matched_transactions_prompt
 from models.MatchTransactionRequest import MatchTransactionRequest
 from tasks.prompt_tasks import process_prompt
-from rabbitmq_publisher import rabbitmq_config
+from rabbitmq_publisher import initialize_rabbitmq, rabbitmq_config
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    initialize_rabbitmq()
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 API_TOKEN = os.getenv("API_TOKEN", "your-secret-token")
 
@@ -17,7 +23,6 @@ def validate_token(authorization: str = Header(...)):
     token = authorization.split(" ")[1]
     if token != API_TOKEN:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-
 
 @app.post("/match-transactions")
 async def match_transactions_endpoint(
