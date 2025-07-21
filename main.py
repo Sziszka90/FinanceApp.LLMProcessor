@@ -6,11 +6,11 @@ from fastapi.params import Header
 from services.llm_service import get_matched_transactions_prompt
 from models.MatchTransactionRequest import MatchTransactionRequest
 from tasks.prompt_tasks import process_prompt
-from rabbitmq_publisher import initialize_rabbitmq, rabbitmq_config
+from rabbitmq_publisher import initialize_rabbitmq_async, rabbitmq_config
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    initialize_rabbitmq()
+    await initialize_rabbitmq_async()
     yield
 
 app = FastAPI(lifespan=lifespan)

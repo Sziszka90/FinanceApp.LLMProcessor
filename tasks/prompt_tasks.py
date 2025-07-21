@@ -1,6 +1,6 @@
 from fastapi import BackgroundTasks
 from services.llm_service import get_llm_response
-from rabbitmq_publisher import publish
+from rabbitmq_publisher import publish_async
 
 async def handle_prompt(
         prompt: str, 
@@ -17,7 +17,7 @@ async def handle_prompt(
             "prompt": prompt,
             "response": response
         }
-        publish(exchange, routing_key, message)
+        await publish_async(exchange, routing_key, message)
 
     except Exception as e:
         error_message = {
@@ -27,7 +27,7 @@ async def handle_prompt(
             "prompt": prompt,
             "error": str(e)
         }
-        publish(exchange, routing_key, error_message)
+        await publish_async(exchange, routing_key, error_message)
         print(f"[ERROR] Failed to process LLM request {correlation_id}: {e}")
 
 async def process_prompt(
