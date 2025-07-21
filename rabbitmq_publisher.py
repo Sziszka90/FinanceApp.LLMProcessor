@@ -1,5 +1,6 @@
 # rabbitmq_publisher.py
 
+import os
 from types import SimpleNamespace
 import json
 import aio_pika
@@ -8,16 +9,21 @@ import asyncio
 with open("rabbitmq_config.json", "r") as f:
     rabbitmq_config = json.load(f, object_hook=lambda d: SimpleNamespace(**d))
 
+HOST_NAME = os.getenv("RABBITMQ_HOST", "localhost")
+PORT = int(os.getenv("RABBITMQ_PORT", 5672))
+USER_NAME = os.getenv("RABBITMQ_USER", "guest")
+PASSWORD = os.getenv("RABBITMQ_PASS", "guest")
+
 async def initialize_rabbitmq_async(max_retries: int = 5, base_wait: int = 5):
     attempt = 0
     while attempt < max_retries:
         try:
             connection = await aio_pika.connect_robust(
-                host=rabbitmq_config.RabbitMqSettings.HostName,
-                port=rabbitmq_config.RabbitMqSettings.Port,
+                host=HOST_NAME,
+                port=PORT,
                 virtualhost="/",
-                login=rabbitmq_config.RabbitMqSettings.UserName,
-                password=rabbitmq_config.RabbitMqSettings.Password,
+                login=USER_NAME,
+                password=PASSWORD,
             )
             channel = await connection.channel()
 

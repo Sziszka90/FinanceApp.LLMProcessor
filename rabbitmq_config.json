@@ -1,9 +1,5 @@
 {
   "RabbitMqSettings": {
-    "HostName": "localhost",
-    "UserName": "admin",
-    "Password": "Secret12345!",
-    "Port": 5672,
     "Exchanges": [
       {
         "ExchangeName": "financeapp.llm.topic",
