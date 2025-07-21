@@ -33,7 +33,7 @@ async def match_transactions_endpoint(
     return await process_prompt(
         get_matched_transactions_prompt(request.transaction_names, request.transaction_group_names), 
         request.user_id, 
-        str(uuid.uuid4()),
+        request.correlation_id,
         rabbitmq_config.RabbitMqSettings.RoutingKeys.TransactionsMatched.RoutingKey,
         rabbitmq_config.RabbitMqSettings.RoutingKeys.TransactionsMatched.ExchangeName,
         background_tasks)
