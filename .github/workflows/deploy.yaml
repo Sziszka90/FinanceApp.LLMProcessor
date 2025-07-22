@@ -25,7 +25,7 @@ jobs:
       - name: Build Docker image
         run: |
           OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          docker build -t ghcr.io/$OWNER/finance-app-llmprocessor:${GITHUB_RUN_NUMBER} -f ./Dockerfile .
+          docker build -t ghcr.io/$OWNER/finance-app-llmprocessor:${GITHUB_RUN_NUMBER} -f ./LLMProcessor.Dockerfile .
 
       - name: Push Docker image
         run: |
