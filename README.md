@@ -247,28 +247,6 @@ services:
       - "15672:15672"
 ```
 
-## 🧪 Testing
-
-```bash
-# Test the API endpoint
-curl -X POST "http://localhost:8000/match-transactions" \
-  -H "Authorization: Bearer your-secret-token" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "transaction_names": ["NETFLIX SUBSCRIPTION"],
-    "transaction_group_names": ["Entertainment", "Utilities"],
-    "user_id": "test-user",
-    "correlation_id": "test-123"
-  }'
-```
-
-## 📊 Monitoring & Health
-
-- **FastAPI Health Checks** - Built-in health monitoring
-- **RabbitMQ Connection Monitoring** - Automatic reconnection on failures
-- **OpenAI API Monitoring** - Rate limiting and error handling
-- **Logging** - Comprehensive logging for debugging and monitoring
-
 ## 🤝 Contributing
 
 1. Fork the repository
