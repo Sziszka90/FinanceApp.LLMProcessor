@@ -4,7 +4,6 @@ from typing import List
 class MatchTransactionRequest(BaseModel):
     transaction_names: List[str] = Field(..., alias="TransactionNames")
     transaction_group_names: List[str] = Field(..., alias="TransactionGroupNames")
-    user_id: str = Field(..., alias="UserId")
     correlation_id: str = Field(..., alias="CorrelationId")
 
     @field_validator('transaction_names')
@@ -17,12 +16,6 @@ class MatchTransactionRequest(BaseModel):
     def group_names_must_not_be_empty(cls, v):
         if not v:
             raise ValueError('TransactionGroupNames must not be empty')
-        return v
-    
-    @field_validator('user_id')
-    def user_id_must_not_be_empty(cls, v):
-        if not v:
-            raise ValueError('UserId must not be empty')
         return v
     
     @field_validator('correlation_id')

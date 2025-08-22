@@ -1,11 +1,11 @@
 import os
-import uuid
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, status
 from fastapi.concurrency import asynccontextmanager
 from fastapi.params import Header
+from models import PromptRequest
 from services.llm_service import get_matched_transactions_prompt
 from models.MatchTransactionRequest import MatchTransactionRequest
-from tasks.prompt_tasks import process_prompt
+from tasks.prompt_tasks import handle_prompt, process_prompt, process_prompt_async
 from rabbitmq_publisher import initialize_rabbitmq_async, rabbitmq_config
 
 @asynccontextmanager
@@ -30,24 +30,22 @@ async def match_transactions_endpoint(
     background_tasks: BackgroundTasks,
     authorization: str = Depends(validate_token)
 ):
-    return await process_prompt(
+    return await process_prompt_async(
         get_matched_transactions_prompt(request.transaction_names, request.transaction_group_names), 
-        request.user_id, 
-        request.correlation_id,
-        rabbitmq_config.RabbitMqSettings.RoutingKeys.TransactionsMatched.RoutingKey,
-        rabbitmq_config.RabbitMqSettings.RoutingKeys.TransactionsMatched.ExchangeName,
-        background_tasks)
+        user_id=request.user_id, 
+        correlation_id=request.correlation_id,
+        routing_key=rabbitmq_config.RabbitMqSettings.RoutingKeys.TransactionsMatched.RoutingKey,
+        exchange_name=rabbitmq_config.RabbitMqSettings.RoutingKeys.TransactionsMatched.ExchangeName,
+        background_tasks=background_tasks)
 
 @app.post("/llmprocessor/prompt")
-async def match_transactions_endpoint(
-    request: MatchTransactionRequest,
+async def prompt_endpoint(
+    request: PromptRequest,
     background_tasks: BackgroundTasks,
     authorization: str = Depends(validate_token)
 ):
     return await process_prompt(
-        get_matched_transactions_prompt(request.transaction_names, request.transaction_group_names), 
-        request.user_id, 
-        request.correlation_id,
-        rabbitmq_config.RabbitMqSettings.RoutingKeys.TransactionsMatched.RoutingKey,
-        rabbitmq_config.RabbitMqSettings.RoutingKeys.TransactionsMatched.ExchangeName,
-        background_tasks)
+        prompt=request.prompt, 
+        user_id=request.user_id, 
+        correlation_id=request.correlation_id,
+        background_tasks=background_tasks)

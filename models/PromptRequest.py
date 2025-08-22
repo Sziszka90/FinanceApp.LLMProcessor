@@ -7,7 +7,7 @@ class MatchTransactionRequest(BaseModel):
     prompt: str = Field(..., alias="Prompt")
 
     @field_validator('prompt')
-    def names_must_not_be_empty(cls, v):
+    def prompt_must_not_be_empty(cls, v):
         if not v:
             raise ValueError('Prompt must not be empty')
         return v

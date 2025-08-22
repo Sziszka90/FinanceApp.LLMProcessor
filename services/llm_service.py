@@ -2,6 +2,8 @@ from typing import List
 import openai
 import os
 
+from tools import tools
+
 openai.api_key = os.getenv("LLM_API_KEY")
 
 async def get_llm_response(prompt: str) -> str:
@@ -13,6 +15,23 @@ async def get_llm_response(prompt: str) -> str:
                 "content": prompt
             }
         ]
+    )
+    return response.choices[0].message.content
+
+async def get_llm_response_with_tools(prompt: str, user_id: str) -> str:
+    response = openai.chat.completions.create(
+        model="gpt-4",
+        messages=[
+             {
+                "role": "system",
+                "content": f"Query all tools and respond for the following user_id: {user_id}."
+            },
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+        tools=tools,
     )
     return response.choices[0].message.content
 
