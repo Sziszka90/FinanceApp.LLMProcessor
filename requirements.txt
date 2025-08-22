@@ -3,3 +3,5 @@ uvicorn
 openai
 aio_pika
 httpx
+langchain.tools
+requests

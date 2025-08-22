@@ -24,7 +24,21 @@ def validate_token(authorization: str = Header(...)):
     if token != API_TOKEN:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
-@app.post("/match-transactions")
+@app.post("/llmprocessor/match-transactions")
+async def match_transactions_endpoint(
+    request: MatchTransactionRequest,
+    background_tasks: BackgroundTasks,
+    authorization: str = Depends(validate_token)
+):
+    return await process_prompt(
+        get_matched_transactions_prompt(request.transaction_names, request.transaction_group_names), 
+        request.user_id, 
+        request.correlation_id,
+        rabbitmq_config.RabbitMqSettings.RoutingKeys.TransactionsMatched.RoutingKey,
+        rabbitmq_config.RabbitMqSettings.RoutingKeys.TransactionsMatched.ExchangeName,
+        background_tasks)
+
+@app.post("/llmprocessor/prompt")
 async def match_transactions_endpoint(
     request: MatchTransactionRequest,
     background_tasks: BackgroundTasks,
