@@ -1,30 +1,20 @@
+
 import requests
-from langchain_core.tools import StructuredTool
 from langchain_openai import ChatOpenAI
-
-# MCP Tool: Call .NET API
-def get_total_spending(month: str):
-    payload = {"name": "get_total_spending", "arguments": {"month": month}}
-    response = requests.post("http://localhost:5000/mcp", json=payload)
-    return response.json()
-
-# Register as LangChain Tool
-spending_tool = StructuredTool.from_function(
-    func=get_total_spending,
-    name="get_total_spending",
-    description="Fetches total spending for a given month"
-)
-
-llm = ChatOpenAI(model="gpt-4", temperature=0)
-
-# Agent with MCP tool
 from langchain.agents import initialize_agent, AgentType
+from tools.tools import get_top_transaction_groups_tool
 
-agent = initialize_agent(
-    tools=[spending_tool],
-    llm=llm,
-    agent_type=AgentType.OPENAI_FUNCTIONS
-)
+class McpClient:
+  def __init__(self, mcp_url: str):
+    
+    self.mcp_url = mcp_url
+    self.llm = ChatOpenAI(model="GPT-4", temperature=0)
 
-# User Query
-print(agent.run("What is my total spending for August?"))
+    self.agent = initialize_agent(
+      tools=[get_top_transaction_groups_tool],
+      llm=self.llm,
+      agent_type=AgentType.OPENAI_FUNCTIONS
+    )
+
+  def run_query(self, query: str):
+    return self.agent.run(query)

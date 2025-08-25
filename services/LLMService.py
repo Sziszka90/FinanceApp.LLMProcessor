@@ -1,26 +1,25 @@
 from typing import List
 from fastapi import BackgroundTasks, Depends
 import openai
-import os
 from clients import McpClient
+from clients.ApiClient import ApiClient
 from rabbitmq_publisher import publish_async
 from tools import tools
 from .abstraction.ILLMService import ILLMService
-from clients.FinanceAppApiClient import FinanceAppApiClient
 
 class LLMService(ILLMService):
   def __init__(
     self, 
     api_key: str = None, 
-    finance_app_api_client: McpClient = None, 
+    api_client: ApiClient = None, 
   ):
     if not api_key:
       raise ValueError("API key is required")
     openai.api_key = api_key
 
-    if not finance_app_api_client:
-      raise ValueError("FinanceAppApiClient is required")
-    self.finance_app_api_client = finance_app_api_client
+    if not api_client:
+      raise ValueError("ApiClient is required")
+    self.api_client = api_client
 
   async def get_llm_response(self, prompt: str) -> str:
     response = openai.chat.completions.create(

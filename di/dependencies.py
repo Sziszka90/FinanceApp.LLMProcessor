@@ -1,4 +1,6 @@
+import asyncio
 from fastapi import Header, HTTPException, status
+from clients.ApiClient import ApiClient
 from services import LLMService, TokenService
 from injector import Injector
 from modules import AppModule
@@ -13,3 +15,7 @@ def authorize_token(authorization: str = Header(...)):
 
 def get_llm_service() -> LLMService:
   return injector.get(LLMService)
+
+def get_top_transaction_groups_sync(user_id: str, start_date: str, end_date: str, top: int = 10):
+  api_client = injector.get(ApiClient)
+  return asyncio.run(api_client.get_top_transaction_group(user_id, start_date, end_date, top))
