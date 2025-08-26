@@ -1,20 +1,17 @@
 
-import requests
-from langchain_openai import ChatOpenAI
-from langchain.agents import initialize_agent, AgentType
-from tools.tools import get_top_transaction_groups_tool
+import httpx
+from clients.abstraction.IMcpClient import IMcpClient
+from models import McpEnvelope
+from models.McpRequest import McpRequest
 
-class McpClient:
-  def __init__(self, mcp_url: str):
-    
-    self.mcp_url = mcp_url
-    self.llm = ChatOpenAI(model="GPT-4", temperature=0)
+class McpClient(IMcpClient):
+  def __init__(self, base_url: str):
+    self.base_url = base_url
 
-    self.agent = initialize_agent(
-      tools=[get_top_transaction_groups_tool],
-      llm=self.llm,
-      agent_type=AgentType.OPENAI_FUNCTIONS
-    )
-
-  def run_query(self, query: str):
-    return self.agent.run(query)
+  async def call_mcp(self, mcp_request: McpRequest) -> McpEnvelope:
+    url = "/mcp"
+    async with httpx.AsyncClient() as client:
+      response = await client.post(f"{self.base_url}{url}", json=mcp_request)
+      response.raise_for_status()
+      response_data = response.json()
+    return McpEnvelope(**response_data)

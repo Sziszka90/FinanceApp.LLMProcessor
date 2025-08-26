@@ -1,12 +1,9 @@
-from abc import ABC, abstractmethod
 
-class IFinanceAppApiClient(ABC):
+from abc import ABC, abstractmethod
+from models.McpEnvelope import McpEnvelope
+from models.McpRequest import McpRequest
+
+class IMcpClient(ABC):
   @abstractmethod
-  async def get_top_transaction_groups(
-    self,
-    start_date: str,
-    end_date: str,
-    top: int = 10,
-    user_id: str = None
-  ):
+  async def call_mcp(self, mcp_request: McpRequest) -> McpEnvelope:
     pass
