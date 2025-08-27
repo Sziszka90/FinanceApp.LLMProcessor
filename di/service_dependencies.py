@@ -1,4 +1,4 @@
-from email.header import Header
+from fastapi import Header
 from fastapi import HTTPException, status
 import injector
 from modules.AppModule import AppModule

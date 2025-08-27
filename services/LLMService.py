@@ -2,10 +2,10 @@ from fastapi import BackgroundTasks
 from langchain_openai import ChatOpenAI
 from langchain.agents import initialize_agent, AgentType
 from clients.RabbitMqClient import RabbitMqClient
-from tools.tools import mcp_dispatcher_tool
+
 
 class LLMService:
-  def __init__(self, rabbitmq_client: RabbitMqClient):
+  def __init__(self, rabbitmq_client: RabbitMqClient, mcp_dispatcher_tool):
     self.llm = ChatOpenAI(model="GPT-4", temperature=0)
     self.agent = initialize_agent(
       tools=[mcp_dispatcher_tool],

@@ -1,7 +1,6 @@
 from pydantic import BaseModel, Field, field_validator
-from typing import List
 
-class MatchTransactionRequest(BaseModel):
+class PromptRequest(BaseModel):
   prompt: str = Field(..., alias="Prompt")
   correlation_id: str = Field(..., alias="CorrelationId")
 

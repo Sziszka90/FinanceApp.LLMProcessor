@@ -1,7 +1,7 @@
 from fastapi import BackgroundTasks, Depends, FastAPI
 from fastapi.concurrency import asynccontextmanager
-from di.client_dependencies import authorize_token, get_llm_service, get_prompt_service
-from models import PromptRequest
+from di.service_dependencies import authorize_token, get_llm_service, get_prompt_service
+from models.PromptRequest import PromptRequest
 from models.MatchTransactionRequest import MatchTransactionRequest
 from rabbitmq_publisher import rabbitmq_config
 from injector import Injector
