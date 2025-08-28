@@ -1,4 +1,3 @@
-
 import httpx
 from clients.abstraction.IMcpClient import IMcpClient
 from models import McpEnvelope
@@ -10,7 +9,7 @@ class McpClient(IMcpClient):
 
   async def call_mcp(self, mcp_request: McpRequest) -> McpEnvelope:
     url = "/mcp"
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(verify=False) as client:
       response = await client.post(f"{self.base_url}{url}", json=mcp_request)
       response.raise_for_status()
       response_data = response.json()

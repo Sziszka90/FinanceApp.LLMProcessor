@@ -1,18 +1,10 @@
 from fastapi import BackgroundTasks, Depends, FastAPI
 from fastapi.concurrency import asynccontextmanager
-from di.service_dependencies import authorize_token, get_llm_service, get_prompt_service
+from di.dependencies import authorize_token, get_llm_service, get_prompt_service, get_rabbitmq_client
 from models.PromptRequest import PromptRequest
 from models.MatchTransactionRequest import MatchTransactionRequest
-from rabbitmq_publisher import rabbitmq_config
-from injector import Injector
-from modules.AppModule import AppModule
-from services import PromptService
 from services.LLMService import LLMService
-
-injector = Injector([AppModule()])
-
-
-from di.client_dependencies import get_rabbitmq_client
+from services.PromptService import PromptService
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -29,14 +21,15 @@ def match_transactions_endpoint(
   authorization: str = Depends(authorize_token),
   prompt_service: PromptService = Depends(get_prompt_service),
   llm_service: LLMService = Depends(get_llm_service),
+  rabbitmq_client = Depends(get_rabbitmq_client)
 ):
   prompt = prompt_service.get_matched_transactions_prompt(transaction_names=request.transaction_names, transaction_group_names=request.transaction_group_names)
   return llm_service.send_prompt_async(
     prompt=prompt,
     user_id=request.user_id,
     correlation_id=request.correlation_id,
-    routing_key=rabbitmq_config.RabbitMqSettings.RoutingKeys.TransactionsMatched.RoutingKey,
-    exchange=rabbitmq_config.RabbitMqSettings.RoutingKeys.TransactionsMatched.ExchangeName,
+    routing_key=rabbitmq_client.rabbitmq_config.RabbitMqSettings.RoutingKeys.TransactionsMatched.RoutingKey,
+    exchange=rabbitmq_client.rabbitmq_config.RabbitMqSettings.RoutingKeys.TransactionsMatched.ExchangeName,
     background_tasks=background_tasks
   )
  
@@ -46,5 +39,5 @@ async def prompt_endpoint(
   authorization: str = Depends(authorize_token),
   llm_service: LLMService = Depends(get_llm_service)
 ):
-  result = await llm_service.send_prompt_sync(request.prompt)
+  result = await llm_service.send_prompt_sync(request.prompt, request.user_id, request.correlation_id)
   return {"result": result}

@@ -1,14 +1,7 @@
 from typing import List
 from services.abstraction.IPromptService import IPromptService
-from services.LLMService import LLMService
-from clients.RabbitMqClient import RabbitMqClient
-from fastapi import BackgroundTasks
 
 class PromptService(IPromptService):
-  def __init__(self, llm_service: LLMService, rabbitmq_client: RabbitMqClient):
-    self.llm_service = llm_service
-    self.rabbitmq_client = rabbitmq_client
-
   def get_matched_transactions_prompt(self, transaction_names: List[str], transaction_group_names: List[str]) -> str:
     return (
       f"""

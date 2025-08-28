@@ -1,25 +1,40 @@
 from fastapi import BackgroundTasks
 from langchain_openai import ChatOpenAI
+from langchain.prompts import PromptTemplate
 from langchain.agents import initialize_agent, AgentType
 from clients.RabbitMqClient import RabbitMqClient
+from langchain_core.tools import StructuredTool
+from services.abstraction.ILLMService import ILLMService
 
 
-class LLMService:
-  def __init__(self, rabbitmq_client: RabbitMqClient, mcp_dispatcher_tool):
-    self.llm = ChatOpenAI(model="GPT-4", temperature=0)
+class LLMService(ILLMService):
+  def __init__(self, rabbitmq_client: RabbitMqClient, mcp_dispatcher_tool: StructuredTool):
+    self.mcp_dispatcher_tool = mcp_dispatcher_tool
+    self.llm = ChatOpenAI(model="gpt-4.1", temperature=0)
+
+    prompt_template = PromptTemplate(
+      input_variables=["input", "user_id", "correlation_id"],
+      template="""
+      System: You are an assistant that can call tools.
+      User ID: {user_id}
+      Correlation ID: {correlation_id}
+
+      Task: {input}
+      """
+    )
+    
     self.agent = initialize_agent(
-      tools=[mcp_dispatcher_tool],
+      tools=[self.mcp_dispatcher_tool],
       llm=self.llm,
-      agent_type=AgentType.OPENAI_FUNCTIONS
+      agent_type=AgentType.OPENAI_FUNCTIONS,
+      handle_parsing_errors=True,
+      prompt=prompt_template
     )
     self.rabbitmq_client = rabbitmq_client
 
-  async def send_prompt_sync(self, query: str):
-    await self.agent.arun(query)
-  
-  async def handle_prompt_async(self, prompt: str, correlation_id: str, exchange: str, user_id: str = None, routing_key: str = None):
+  async def execute_prompt_request(self, prompt: str, correlation_id: str, exchange: str, user_id: str = None, routing_key: str = None):
     try:
-      response = await self.send_prompt_sync(prompt)
+      response = await self.agent.ainvoke({"input": prompt})
       message = {
         "correlation_id": correlation_id,
         "success": True,
@@ -28,7 +43,6 @@ class LLMService:
         "response": response
       }
       await self.rabbitmq_client.publish_async(exchange, routing_key, message)
-
     except Exception as e:
       error_message = {
         "correlation_id": correlation_id,
@@ -40,18 +54,26 @@ class LLMService:
       await self.rabbitmq_client.publish_async(exchange, routing_key, error_message)
       print(f"[ERROR] Failed to process LLM request {correlation_id}: {e}")
 
+  async def send_prompt_sync(self, prompt: str, user_id: str, correlation_id: str) -> str:
+    result = await self.agent.ainvoke({
+    "input": prompt,
+    "user_id": user_id,
+    "correlation_id": correlation_id
+  })
+    return result
+
   def send_prompt_async(
-      self, 
-      prompt: str, 
-      user_id: str, 
-      correlation_id: str, 
-      routing_key: str, 
-      exchange: str, 
-      background_tasks: BackgroundTasks
+    self,
+    prompt: str,
+    user_id: str,
+    correlation_id: str, 
+    routing_key: str, 
+    exchange: str, 
+    background_tasks: BackgroundTasks
   ):
     try:
       background_tasks.add_task(
-        self.handle_prompt_async,
+        self.execute_prompt_request,
         prompt,
         correlation_id,
         exchange,
