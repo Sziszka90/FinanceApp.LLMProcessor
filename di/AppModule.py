@@ -2,6 +2,7 @@ import os
 from injector import Binder, Module, provider, singleton
 from clients.McpClient import McpClient
 from services.LLMService import LLMService
+from services.LoggerService import LoggerService
 from services.PromptService import PromptService
 from services.TokenService import TokenService
 from clients.RabbitMqClient import RabbitMqClient
@@ -12,6 +13,7 @@ from tools.tools import create_structured_tool
 
 class AppModule(Module):
   def configure(self, binder: Binder):
+    binder.bind(LoggerService, to=self.create_logger_service, scope=singleton)
     binder.bind(McpClient, to=self.create_mcp_client, scope=singleton)
     binder.bind(McpTool, to=self.create_mcp_tool, scope=singleton)
     binder.bind(RabbitMqClient, to=self.create_rabbitmq_client, scope=singleton)
@@ -22,18 +24,23 @@ class AppModule(Module):
 
   @singleton
   @provider
-  def create_mcp_client(self) -> McpClient:
-    return McpClient(base_url=os.getenv("API_URL"))
+  def create_logger_service(self) -> LoggerService:
+    return LoggerService()
 
   @singleton
   @provider
-  def create_mcp_tool(self, mcp_client: McpClient) -> McpTool:
-    return McpTool(mcp_client)
+  def create_mcp_client(self, logger: LoggerService) -> McpClient:
+    return McpClient(base_url=os.getenv("API_URL"), logger=logger)
 
   @singleton
   @provider
-  def create_rabbitmq_client(self) -> RabbitMqClient:
-    return RabbitMqClient()
+  def create_mcp_tool(self, mcp_client: McpClient, logger: LoggerService) -> McpTool:
+    return McpTool(mcp_client, logger=logger)
+
+  @singleton
+  @provider
+  def create_rabbitmq_client(self, logger: LoggerService) -> RabbitMqClient:
+    return RabbitMqClient(logger=logger)
 
   @singleton
   @provider
@@ -43,8 +50,8 @@ class AppModule(Module):
 
   @singleton
   @provider
-  def create_llm_service(self, rabbitmq_client: RabbitMqClient, mcp_dispatcher_tool: StructuredTool) -> LLMService:
-    return LLMService(rabbitmq_client=rabbitmq_client, mcp_dispatcher_tool=mcp_dispatcher_tool)
+  def create_llm_service(self, rabbitmq_client: RabbitMqClient, mcp_dispatcher_tool: StructuredTool, logger: LoggerService) -> LLMService:
+    return LLMService(rabbitmq_client=rabbitmq_client, mcp_dispatcher_tool=mcp_dispatcher_tool, logger=logger)
 
   @singleton
   @provider
@@ -53,7 +60,7 @@ class AppModule(Module):
 
   @singleton
   @provider
-  def create_token_service(self) -> TokenService:
-    return TokenService()
+  def create_token_service(self, logger: LoggerService) -> TokenService:
+    return TokenService(logger=logger)
 
 

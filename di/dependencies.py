@@ -3,11 +3,15 @@ from injector import Injector
 from clients.McpClient import McpClient
 from clients.RabbitMqClient import RabbitMqClient
 from di.AppModule import AppModule
+from services import LoggerService
 from services.TokenService import TokenService
 from services.LLMService import LLMService
 from services.PromptService import PromptService
 
 injector = Injector([AppModule()])
+
+def get_logger_service() -> LoggerService:
+  return injector.get(LoggerService)
 
 def get_rabbitmq_client() -> RabbitMqClient:
   return injector.get(RabbitMqClient)
