@@ -1,39 +1,51 @@
-import os
-import uuid
-from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, status
+from fastapi import HTTPException
+from fastapi import BackgroundTasks, Depends, FastAPI
 from fastapi.concurrency import asynccontextmanager
-from fastapi.params import Header
-from services.llm_service import get_matched_transactions_prompt
+from di.dependencies import authorize_token, get_llm_service, get_prompt_service, get_rabbitmq_client
+from models.PromptRequest import PromptRequest
 from models.MatchTransactionRequest import MatchTransactionRequest
-from tasks.prompt_tasks import process_prompt
-from rabbitmq_publisher import initialize_rabbitmq_async, rabbitmq_config
+from services.LLMService import LLMService
+from services.PromptService import PromptService
+from fastapi import FastAPI, Request
+from dependencies.global_exception_handler import global_exception_handler
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await initialize_rabbitmq_async()
-    yield
+  rabbitmq_client = get_rabbitmq_client()
+  await rabbitmq_client.initialize_async()
+  yield
 
 app = FastAPI(lifespan=lifespan)
 
-API_TOKEN = os.getenv("API_TOKEN", "your-secret-token")
+app.add_exception_handler(Exception, global_exception_handler)
 
-def validate_token(authorization: str = Header(...)):
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authorization header")
-    token = authorization.split(" ")[1]
-    if token != API_TOKEN:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-
-@app.post("/match-transactions")
-async def match_transactions_endpoint(
-    request: MatchTransactionRequest,
-    background_tasks: BackgroundTasks,
-    authorization: str = Depends(validate_token)
+@app.post("/llmprocessor/match-transactions")
+def match_transactions_endpoint(
+  request: MatchTransactionRequest,
+  background_tasks: BackgroundTasks,
+  authorization: str = Depends(authorize_token),
+  prompt_service: PromptService = Depends(get_prompt_service),
+  llm_service: LLMService = Depends(get_llm_service),
+  rabbitmq_client = Depends(get_rabbitmq_client)
 ):
-    return await process_prompt(
-        get_matched_transactions_prompt(request.transaction_names, request.transaction_group_names), 
-        request.user_id, 
-        request.correlation_id,
-        rabbitmq_config.RabbitMqSettings.RoutingKeys.TransactionsMatched.RoutingKey,
-        rabbitmq_config.RabbitMqSettings.RoutingKeys.TransactionsMatched.ExchangeName,
-        background_tasks)
+  prompt = prompt_service.get_matched_transactions_prompt(transaction_names=request.transaction_names, transaction_group_names=request.transaction_group_names)
+  return llm_service.send_prompt_async_process(
+    prompt=prompt,
+    user_id=request.user_id,
+    correlation_id=request.correlation_id,
+    routing_key=rabbitmq_client.rabbitmq_config.RabbitMqSettings.RoutingKeys.TransactionsMatched.RoutingKey,
+    exchange=rabbitmq_client.rabbitmq_config.RabbitMqSettings.RoutingKeys.TransactionsMatched.ExchangeName,
+    background_tasks=background_tasks
+  )
+ 
+@app.post("/llmprocessor/prompt")
+async def prompt_endpoint(
+  request: PromptRequest,
+  authorization: str = Depends(authorize_token),
+  llm_service: LLMService = Depends(get_llm_service)
+):
+  result = await llm_service.send_prompt_sync_process(request.prompt, request.user_id, request.correlation_id)
+  messages = result.get('messages', [])
+  last_message = messages[-1]
+  last_message_content = getattr(last_message, 'content', '')
+  return {"result": last_message_content}

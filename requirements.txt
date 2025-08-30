@@ -3,3 +3,6 @@ uvicorn
 openai
 aio_pika
 httpx
+langgraph
+requests
+injector
