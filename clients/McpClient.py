@@ -14,7 +14,7 @@ class McpClient(IMcpClient):
     url = "/mcp"
     try:
       async with httpx.AsyncClient(verify=False) as client:
-        response = await client.post(f"{self.base_url}{url}", json=mcp_request.model_dump())
+        response = await client.post("https://financeapp.fun/api/v1/mcp", json=mcp_request.model_dump())
         response.raise_for_status()
         response_data = response.json()
         if 'payload' in response_data and not isinstance(response_data['payload'], str):
