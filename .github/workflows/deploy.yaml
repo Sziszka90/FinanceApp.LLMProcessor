@@ -46,7 +46,7 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           allow-no-subscription: true
-          auth-type: oidc
+          auth-type: SERVICE_PRINCIPAL
 
       - name: Upgrade Azure Container Apps extension
         run: |
