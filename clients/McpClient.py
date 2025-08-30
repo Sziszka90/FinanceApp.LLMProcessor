@@ -6,8 +6,7 @@ from models.McpRequest import McpRequest
 from services.abstraction.ILoggerService import ILoggerService
 
 class McpClient(IMcpClient):
-  def __init__(self, base_url: str, logger: ILoggerService):
-    self.base_url = base_url
+  def __init__(self, logger: ILoggerService):
     self.logger = logger
 
   async def call_mcp(self, mcp_request: McpRequest) -> McpEnvelope:

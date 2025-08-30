@@ -36,7 +36,7 @@ class AppModule(Module):
   @singleton
   @provider
   def create_mcp_client(self, logger: ILoggerService) -> IMcpClient:
-    return McpClient(base_url=os.getenv("API_URL") + "/api/v1", logger=logger)
+    return McpClient(logger=logger)
 
   @singleton
   @provider
