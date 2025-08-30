@@ -29,7 +29,7 @@ def match_transactions_endpoint(
   rabbitmq_client = Depends(get_rabbitmq_client)
 ):
   prompt = prompt_service.get_matched_transactions_prompt(transaction_names=request.transaction_names, transaction_group_names=request.transaction_group_names)
-  return llm_service.send_prompt_async(
+  return llm_service.send_prompt_async_process(
     prompt=prompt,
     user_id=request.user_id,
     correlation_id=request.correlation_id,
@@ -44,7 +44,7 @@ async def prompt_endpoint(
   authorization: str = Depends(authorize_token),
   llm_service: LLMService = Depends(get_llm_service)
 ):
-  result = await llm_service.send_prompt_sync(request.prompt, request.user_id, request.correlation_id)
+  result = await llm_service.send_prompt_sync_process(request.prompt, request.user_id, request.correlation_id)
   messages = result.get('messages', [])
   last_message = messages[-1]
   last_message_content = getattr(last_message, 'content', '')

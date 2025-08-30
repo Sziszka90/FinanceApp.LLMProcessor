@@ -79,7 +79,7 @@ class LLMService(ILLMService):
       await self.rabbitmq_client.publish_async(exchange, routing_key, error_message)
       self.logger.error(f"Error processing LLM request {correlation_id}: {str(e)}")
 
-  async def send_prompt_sync(self, prompt: str, user_id: str, correlation_id: str) -> str:
+  async def send_prompt_sync_process(self, prompt: str, user_id: str, correlation_id: str) -> str:
     try:
       messages = ChatMessages(
         messages=[
@@ -97,7 +97,7 @@ class LLMService(ILLMService):
     self.logger.info(f"Successfully processed LLM request {correlation_id}")
     return result
 
-  def send_prompt_async(
+  def send_prompt_async_process(
     self,
     prompt: str,
     user_id: str,
