@@ -1,5 +1,4 @@
-from types import CoroutineType
-from typing import Any
+from typing import Any, Coroutine
 from langchain_core.tools import StructuredTool
 from models.McpRequest import McpRequest
 from models.McpTopTransactionGroupsRequest import McpTopTransactionGroupsRequest
@@ -10,7 +9,7 @@ class ToolFactory(IToolFactory):
   def __init__(self, mcp_tool: IMcpTool):
     self.mcp_tool = mcp_tool
 
-  def create_top_transaction_groups_tool_runner(self) -> CoroutineType[Any, Any, str]:
+  def create_top_transaction_groups_tool_runner(self) -> Coroutine[Any, Any, str]:
     async def run_mcp_tool(
         action: str = "get_top_transaction_groups", 
         start_date: str = "2000-01-01T00:00:00Z", 
@@ -39,7 +38,7 @@ class ToolFactory(IToolFactory):
 
     return run_mcp_tool
 
-  def create_top_transaction_groups_tool(self, mcp_tool_runner: CoroutineType[Any, Any, str]):
+  def create_top_transaction_groups_tool(self, mcp_tool_runner: Coroutine[Any, Any, str]):
     description = """
     Call the 'get_top_transaction_groups' MCP tool with the required parameters.
     This tool retrieves the top transaction groups with the most spendings.
