@@ -4,5 +4,6 @@ openai
 aio_pika
 httpx
 langgraph
+langchain
 requests
 injector
