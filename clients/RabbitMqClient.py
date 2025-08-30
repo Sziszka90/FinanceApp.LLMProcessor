@@ -4,21 +4,19 @@ from types import SimpleNamespace
 import json
 import aio_pika
 import asyncio
-from services.LoggerService import LoggerService
+from services.abstraction.ILoggerService import ILoggerService
 
 class RabbitMqClient:
-  def __init__(self, logger: LoggerService, config_path: str = "rabbitmq_config.json"):
+  def __init__(self, logger: ILoggerService):
     self.logger = logger
-
-    with open(config_path, "r") as f:
-      self.rabbitmq_config = json.load(f, object_hook=lambda d: SimpleNamespace(**d))
 
     self.host = os.getenv("RABBITMQ_HOST", "localhost")
     self.port = int(os.getenv("RABBITMQ_PORT", 5672))
     self.user = os.getenv("RABBITMQ_USER", "guest")
     self.password = os.getenv("RABBITMQ_PASS", "guest")
 
-    self.logger.info("RabbitMQ client initialized")
+    with open("rabbitmq_config.json", "r") as f:
+      self.rabbitmq_config = json.load(f, object_hook=lambda d: SimpleNamespace(**d))
 
   async def initialize_async(self, max_retries: int = 5, base_wait: int = 5):
     attempt = 0

@@ -1,11 +1,11 @@
 import os
 from fastapi import HTTPException, status
 from fastapi.params import Header
-from services.LoggerService import LoggerService
+from services.abstraction.ILoggerService import ILoggerService
 from services.abstraction.ITokenService import ITokenService
 
 class TokenService(ITokenService):
-  def __init__(self, logger: LoggerService):
+  def __init__(self, logger: ILoggerService):
     self.api_token = os.getenv("API_TOKEN")
     self.logger = logger
 

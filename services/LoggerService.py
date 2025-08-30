@@ -1,6 +1,7 @@
 import logging
+from services.abstraction.ILoggerService import ILoggerService
 
-class LoggerService:
+class LoggerService(ILoggerService):
   def __init__(self, name=__name__):
     self.logger = logging.getLogger(name)
     if not self.logger.hasHandlers():
@@ -14,6 +15,9 @@ class LoggerService:
 
   def error(self, msg):
     self.logger.error(msg)
+
+  def warning(self, msg):
+    self.logger.warning(msg)
 
   def debug(self, msg):
     self.logger.debug(msg)

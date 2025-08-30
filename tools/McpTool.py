@@ -1,10 +1,10 @@
 from clients.McpClient import McpClient
 from models.McpRequest import McpRequest
-from services.LoggerService import LoggerService
+from services.abstraction.ILoggerService import ILoggerService
 from tools.abstraction.IMcpTool import IMcpTool
 
 class McpTool(IMcpTool):
-  def __init__(self, mcp_client: McpClient, logger: LoggerService):
+  def __init__(self, mcp_client: McpClient, logger: ILoggerService):
     self.mcp_client = mcp_client
     self.logger = logger
 

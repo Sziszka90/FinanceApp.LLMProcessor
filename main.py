@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from fastapi import BackgroundTasks, Depends, FastAPI
 from fastapi.concurrency import asynccontextmanager
 from di.dependencies import authorize_token, get_llm_service, get_prompt_service, get_rabbitmq_client
@@ -5,6 +6,8 @@ from models.PromptRequest import PromptRequest
 from models.MatchTransactionRequest import MatchTransactionRequest
 from services.LLMService import LLMService
 from services.PromptService import PromptService
+from fastapi import FastAPI, Request
+from dependencies.global_exception_handler import global_exception_handler
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -13,6 +16,8 @@ async def lifespan(app: FastAPI):
   yield
 
 app = FastAPI(lifespan=lifespan)
+
+app.add_exception_handler(Exception, global_exception_handler)
 
 @app.post("/llmprocessor/match-transactions")
 def match_transactions_endpoint(
@@ -40,4 +45,7 @@ async def prompt_endpoint(
   llm_service: LLMService = Depends(get_llm_service)
 ):
   result = await llm_service.send_prompt_sync(request.prompt, request.user_id, request.correlation_id)
-  return {"result": result}
+  messages = result.get('messages', [])
+  last_message = messages[-1]
+  last_message_content = getattr(last_message, 'content', '')
+  return {"result": last_message_content}

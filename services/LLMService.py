@@ -1,31 +1,35 @@
 from fastapi import BackgroundTasks
-from langchain_openai import ChatOpenAI
-from langchain.agents import initialize_agent, AgentType
-from langchain.prompts import PromptTemplate
-from clients.RabbitMqClient import RabbitMqClient
-from langchain_core.tools import StructuredTool
-from services.LoggerService import LoggerService
+from langchain.chat_models import init_chat_model
+from langgraph.prebuilt import create_react_agent
+from clients.abstraction.IRabbitMqClient import IRabbitMqClient
+from models.Message import Message
+from models.ChatMessage import ChatMessage, ChatMessages
 from services.abstraction.ILLMService import ILLMService
+from services.abstraction.ILoggerService import ILoggerService
+from tools.abstraction.IToolFactory import IToolFactory
+from langchain.schema import SystemMessage
 
 class LLMService(ILLMService):
-  def __init__(self, rabbitmq_client: RabbitMqClient, mcp_dispatcher_tool: StructuredTool, logger: LoggerService):
-    self.mcp_dispatcher_tool = mcp_dispatcher_tool
+  def __init__(self, rabbitmq_client: IRabbitMqClient, logger: ILoggerService, tool_factory: IToolFactory):
+    self.tool_factory = tool_factory
+    self.tools = self.tool_factory.create_tools()
     self.rabbitmq_client = rabbitmq_client
     self.logger = logger
-    self.llm = ChatOpenAI(model="gpt-4.1", temperature=0)
-
-    prompt = PromptTemplate.from_template(
-      """You must strictly follow the provided tool schema.
-        Use only exact parameter names: action, parameters, startDate, endDate, top, userId, correlationId.
-        Do not rename or add alternative names. Do not add extra keys.
-        Return valid JSON only."""
+    self.llm = init_chat_model("openai:gpt-4.1")
+    prompt = SystemMessage(
+      content="""
+      You are a helpful financial assistant in a finance application.
+      Use the following tools to assist with financial queries.
+      Always think step-by-step and use the tools when necessary.
+      If you don't know the answer, just say you don't know. Do not make up an answer.
+      If information is missing, make the best assumption and proceed.
+      I always send the user_id and correlation_id in system message. These are only for internal use never to be shared with the user.
+      Return your response as a single-line string. Do not include any newline characters (\n) or line breaks.
+      Never ask the user for clarification."""
     )
-
-    self.agent = initialize_agent(
-      tools=[self.mcp_dispatcher_tool],
-      llm=self.llm,
-      agent_type=AgentType.OPENAI_FUNCTIONS,
-      handle_parsing_errors=True,
+    self.agent = create_react_agent(
+      model=self.llm,
+      tools=self.tools,
       prompt=prompt
     )
 
@@ -38,33 +42,54 @@ class LLMService(ILLMService):
     ):
 
     try:
-      response = await self.agent.ainvoke({"input": prompt})
-      message = {
-        "correlation_id": correlation_id,
-        "success": True,
-        "user_id": user_id,
-        "prompt": prompt,
-        "response": response
-      }
-      await self.rabbitmq_client.publish_async(exchange, routing_key, message)
+      message = ChatMessages(
+        messages=[
+          ChatMessage(role="system", content="user_id: " + user_id + " correlation_id: " + correlation_id),
+          ChatMessage(role="user", content=prompt)
+        ]
+      )
+
+      message_dump = message.model_dump()
+      response = await self.agent.ainvoke(message_dump)
+      messages = response.get('messages', [])
+      last_message = messages[-1]
+      result = getattr(last_message, 'content', '')
+
+      message = Message(
+        CorrelationId=correlation_id,
+        Success=True,
+        UserId=user_id,
+        Prompt=prompt,
+        Response=result
+      )
+
+      message_json = message.model_dump()
+      await self.rabbitmq_client.publish_async(exchange, routing_key, message_json)
       self.logger.info(f"Successfully processed LLM request {correlation_id}")
 
     except Exception as e:
-      error_message = {
-        "correlation_id": correlation_id,
-        "success": False,
-        "user_id": user_id,
-        "prompt": prompt,
-        "error": str(e)
-      }
+      error_message = Message(
+        CorrelationId=correlation_id,
+        Success=False,
+        UserId=user_id,
+        Prompt=prompt,
+        Error=str(e)
+      )
+      
       await self.rabbitmq_client.publish_async(exchange, routing_key, error_message)
       self.logger.error(f"Error processing LLM request {correlation_id}: {str(e)}")
 
   async def send_prompt_sync(self, prompt: str, user_id: str, correlation_id: str) -> str:
     try:
-      result = await self.agent.ainvoke({
-        "input": prompt + " user_id: " + user_id + " correlation_id: " + correlation_id,
-      })
+      messages = ChatMessages(
+        messages=[
+          ChatMessage(role="system", content="user_id: " + user_id + " correlation_id: " + correlation_id),
+          ChatMessage(role="user", content=prompt)
+        ]
+      )
+      message_dump = messages.model_dump()
+      result = await self.agent.ainvoke(message_dump)
+
     except Exception as e:
       self.logger.error(f"Error during ainvoke: {e}")
       result = None
@@ -83,7 +108,7 @@ class LLMService(ILLMService):
   ):
     try:
       background_tasks.add_task(
-        self.execute_prompt_request,
+        self.process_and_publish_prompt,
         prompt,
         correlation_id,
         exchange,

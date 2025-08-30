@@ -1,32 +1,24 @@
 from fastapi import Header
 from injector import Injector
-from clients.McpClient import McpClient
-from clients.RabbitMqClient import RabbitMqClient
+from clients.abstraction.IRabbitMqClient import IRabbitMqClient
 from di.AppModule import AppModule
-from services import LoggerService
-from services.TokenService import TokenService
-from services.LLMService import LLMService
-from services.PromptService import PromptService
+from services.abstraction.ILLMService import ILLMService
+from services.abstraction.IPromptService import IPromptService
+from services.abstraction.ITokenService import ITokenService
 
 injector = Injector([AppModule()])
 
-def get_logger_service() -> LoggerService:
-  return injector.get(LoggerService)
-
-def get_rabbitmq_client() -> RabbitMqClient:
-  return injector.get(RabbitMqClient)
-
-def get_mcp_client() -> McpClient:
-  return injector.get(McpClient)
+def get_rabbitmq_client() -> IRabbitMqClient:
+  return injector.get(IRabbitMqClient)
 
 def authorize_token(authorization: str = Header(...)):
-  token_service = injector.get(TokenService)
+  token_service = injector.get(ITokenService)
   token_service.validate_token(authorization)
   return authorization
 
-def get_llm_service() -> LLMService:
-  return injector.get(LLMService)
+def get_llm_service() -> ILLMService:
+  return injector.get(ILLMService)
 
-def get_prompt_service() -> PromptService:
-  return injector.get(PromptService)
+def get_prompt_service() -> IPromptService:
+  return injector.get(IPromptService)
 

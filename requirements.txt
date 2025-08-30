@@ -3,6 +3,6 @@ uvicorn
 openai
 aio_pika
 httpx
-langchain.tools
+langgraph
 requests
 injector
