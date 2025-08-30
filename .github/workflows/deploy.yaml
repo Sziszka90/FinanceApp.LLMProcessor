@@ -57,7 +57,7 @@ jobs:
             --resource-group projects \
             --image ghcr.io/$OWNER/finance-app-llmprocessor:${GITHUB_RUN_NUMBER} \
             --set-env-vars \
-              LLM_API_KEY='${{ secrets.LLM_API_KEY }}' \
+              OPENAI_API_KEY='${{ secrets.OPENAI_API_KEY }}' \
               RABBITMQ_HOST='${{ vars.RABBITMQ_HOST }}' \
               RABBITMQ_PORT='${{ vars.RABBITMQ_PORT }}' \
               RABBITMQ_VHOST='${{ vars.RABBITMQ_VHOST }}' \
