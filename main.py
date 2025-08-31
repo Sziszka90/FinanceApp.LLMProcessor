@@ -1,4 +1,3 @@
-from fastapi import HTTPException
 from fastapi import BackgroundTasks, Depends, FastAPI
 from fastapi.concurrency import asynccontextmanager
 from di.dependencies import authorize_token, get_llm_service, get_prompt_service, get_rabbitmq_client
@@ -44,7 +43,7 @@ async def prompt_endpoint(
   authorization: str = Depends(authorize_token),
   llm_service: LLMService = Depends(get_llm_service)
 ):
-  result = await llm_service.send_prompt_sync_process(request.prompt, request.user_id, request.correlation_id)
+  result = await llm_service.send_prompt_sync_process(request.Prompt, request.UserId, request.CorrelationId)
   messages = result.get('messages', [])
   last_message = messages[-1]
   last_message_content = getattr(last_message, 'content', '')
