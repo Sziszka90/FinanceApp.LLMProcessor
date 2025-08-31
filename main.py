@@ -28,11 +28,11 @@ def match_transactions_endpoint(
   llm_service: LLMService = Depends(get_llm_service),
   rabbitmq_client = Depends(get_rabbitmq_client)
 ):
-  prompt = prompt_service.get_matched_transactions_prompt(transaction_names=request.transaction_names, transaction_group_names=request.transaction_group_names)
+  prompt = prompt_service.get_matched_transactions_prompt(transaction_names=request.TransactionNames, transaction_group_names=request.TransactionGroupNames)
   return llm_service.send_prompt_async_process(
     prompt=prompt,
-    user_id=request.user_id,
-    correlation_id=request.correlation_id,
+    user_id=request.UserId,
+    correlation_id=request.CorrelationId,
     routing_key=rabbitmq_client.rabbitmq_config.RabbitMqSettings.RoutingKeys.TransactionsMatched.RoutingKey,
     exchange=rabbitmq_client.rabbitmq_config.RabbitMqSettings.RoutingKeys.TransactionsMatched.ExchangeName,
     background_tasks=background_tasks
