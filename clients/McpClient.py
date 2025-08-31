@@ -16,7 +16,9 @@ class McpClient(IMcpClient):
       raise ValueError("MCP_API_BASE_URL not set")
     try:
       async with httpx.AsyncClient(timeout=60.0,verify=False) as client:
+        self.logger.info(f"Calling MCP at {url} with request: {mcp_request}")
         response = await client.post(url, json=mcp_request.model_dump())
+        self.logger.info(f"Received MCP response: {response}")
         response.raise_for_status()
         response_data = response.json()
         if 'Payload' in response_data and not isinstance(response_data['Payload'], str):
