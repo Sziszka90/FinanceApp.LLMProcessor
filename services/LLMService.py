@@ -44,8 +44,8 @@ class LLMService(ILLMService):
     try:
       message = ChatMessages(
         messages=[
-          ChatMessage(role="system", content="user_id: " + user_id + " correlation_id: " + correlation_id),
-          ChatMessage(role="user", content=prompt)
+          ChatMessage(Role="system", Content="user_id: " + user_id + " correlation_id: " + correlation_id),
+          ChatMessage(Role="user", Content=prompt)
         ]
       )
 
@@ -83,8 +83,8 @@ class LLMService(ILLMService):
     try:
       messages = ChatMessages(
         messages=[
-          ChatMessage(role="system", content="user_id: " + user_id + " correlation_id: " + correlation_id),
-          ChatMessage(role="user", content=prompt)
+          ChatMessage(Role="system", Content="user_id: " + user_id + " correlation_id: " + correlation_id),
+          ChatMessage(Role="user", Content=prompt)
         ]
       )
       message_dump = messages.model_dump()
@@ -116,8 +116,8 @@ class LLMService(ILLMService):
         routing_key,
       )
       self.logger.info(f"Successfully scheduled LLM request {correlation_id}")
-      return {"status": "success", "correlation_id": correlation_id, "message": "Request received and will be processed"}
-    
+      return {"Status": "success", "CorrelationId": correlation_id, "Message": "Request received and will be processed"}
+
     except Exception as e:
       self.logger.error(f"Error scheduling LLM request {correlation_id}: {str(e)}")
-      return {"status": "error", "message": str(e)}
+      return {"Status": "error", "Message": str(e)}
