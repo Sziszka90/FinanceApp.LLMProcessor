@@ -1,16 +1,17 @@
-from typing import List
-from pydantic import BaseModel, field_validator, field_validator
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 class ChatMessage(BaseModel):
-  Role: str = Field(..., min_length=1, description="Role of the message sender (e.g., 'system', 'user').", alias="role")
-  Content: str = Field(..., min_length=1, description="Content of the message.", alias="content")
+  role: str = Field(..., min_length=1, description="Role of the message sender (e.g., 'system', 'user').", alias="Role")
+  content: str = Field(..., min_length=1, description="Content of the message.", alias="Content")
 
-  @field_validator('Role', 'Content')
+  @field_validator('role', 'content')
   def must_not_be_empty(cls, v, field):
     if not v or not str(v).strip():
       raise ValueError(f'{field.name} must be a non-empty string')
     return v
 
+  model_config = {"populate_by_name": True}
+
 class ChatMessages(BaseModel):
-  Messages: List[ChatMessage]
+  messages: list[ChatMessage] = Field(..., alias="Messages")
+  model_config = {"populate_by_name": True}

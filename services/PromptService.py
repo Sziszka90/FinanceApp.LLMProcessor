@@ -1,8 +1,7 @@
-from typing import List
 from services.abstraction.IPromptService import IPromptService
 
 class PromptService(IPromptService):
-  def get_matched_transactions_prompt(self, transaction_names: List[str], transaction_group_names: List[str]) -> str:
+  def get_matched_transactions_prompt(self, transaction_names: list[str], transaction_group_names: list[str]) -> str:
     return (
       f"""
       You are a financial assistant creating transaction groups for bank transactions.

@@ -1,9 +1,8 @@
 from pydantic import BaseModel, Field, field_validator
-from typing import List
 
 class MatchTransactionRequest(BaseModel):
-  TransactionNames: List[str] = Field(...)
-  TransactionGroupNames: List[str] = Field(...)
+  TransactionNames: list[str] = Field(...)
+  TransactionGroupNames: list[str] = Field(...)
   CorrelationId: str = Field(...)
   UserId: str = Field(...)
 
