@@ -15,7 +15,7 @@ class McpClient(IMcpClient):
     if not url:
       raise ValueError("MCP_API_BASE_URL not set")
     try:
-      async with httpx.AsyncClient(verify=False) as client:
+      async with httpx.AsyncClient(timeout=60.0,verify=False) as client:
         response = await client.post(url, json=mcp_request.model_dump())
         response.raise_for_status()
         response_data = response.json()

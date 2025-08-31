@@ -11,36 +11,36 @@ class ToolFactory(IToolFactory):
 
   def create_top_transaction_groups_tool_runner(self) -> Coroutine[Any, Any, str]:
     async def run_mcp_tool(
-        action: str = "get_top_transaction_groups", 
-        start_date: str = "2000-01-01T00:00:00Z", 
-        end_date: str = "2100-01-31T23:59:59Z", 
-        top: int = 10,
-        user_id: str = None,
-        correlation_id: str = None
+        ToolName: str = "GetTopTransactionGroups", 
+        StartDate: str = "2000-01-01T00:00:00Z", 
+        EndDate: str = "2100-01-31T23:59:59Z", 
+        Top: int = 10,
+        UserId: str = None,
+        CorrelationId: str = None
     ):
 
-      if user_id is None:
-        raise ValueError("user_id is required")
-      if correlation_id is None:
-        raise ValueError("correlation_id is required")
+      if UserId is None:
+        raise ValueError("UserId is required")
+      if CorrelationId is None:
+        raise ValueError("CorrelationId is required")
 
       request = McpTopTransactionGroupsRequest(
-        action=action,
-        start_date=start_date,
-        end_date=end_date,
-        top=top,
-        user_id=user_id,
-        correlation_id=correlation_id
+        ToolName=ToolName,
+        StartDate=StartDate,
+        EndDate=EndDate,
+        Top=Top,
+        UserId=UserId,
+        CorrelationId=CorrelationId
       )
       request_dict = request.model_dump() if hasattr(request, 'model_dump') else dict(request)
-      request_obj = McpRequest(action=request_dict.pop("action"), parameters=request_dict)
+      request_obj = McpRequest(ToolName=request_dict.pop("ToolName"), Parameters=request_dict)
       return await self.mcp_tool.run(mcp_request=request_obj)
 
     return run_mcp_tool
 
   def create_top_transaction_groups_tool(self, mcp_tool_runner: Coroutine[Any, Any, str]):
     description = """
-    Call the 'get_top_transaction_groups' MCP tool with the required parameters.
+    Call the 'GetTopTransactionGroups' MCP tool with the required parameters.
     This tool retrieves the top transaction groups with the most spendings.
     Parameters: 
     startDate: The start date for the transaction groups query.
@@ -49,7 +49,7 @@ class ToolFactory(IToolFactory):
     """
     return StructuredTool.from_function(
       func=mcp_tool_runner,
-      name="get_top_transaction_groups",
+      name="GetTopTransactionGroups",
       args_schema=McpTopTransactionGroupsRequest,
       description=description,
       coroutine=mcp_tool_runner,
