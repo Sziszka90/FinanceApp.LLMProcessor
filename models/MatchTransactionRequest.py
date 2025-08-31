@@ -2,30 +2,30 @@ from pydantic import BaseModel, Field, field_validator
 from typing import List
 
 class MatchTransactionRequest(BaseModel):
-  transaction_names: List[str] = Field(..., alias="TransactionNames")
-  transaction_group_names: List[str] = Field(..., alias="TransactionGroupNames")
-  correlation_id: str = Field(..., alias="CorrelationId")
-  user_id: str = Field(..., alias="UserId")
+  TransactionNames: List[str] = Field(...)
+  TransactionGroupNames: List[str] = Field(...)
+  CorrelationId: str = Field(...)
+  UserId: str = Field(...)
 
-  @field_validator('transaction_names')
+  @field_validator('TransactionNames')
   def names_must_not_be_empty(cls, v):
     if not v:
       raise ValueError('TransactionNames must not be empty')
     return v
 
-  @field_validator('transaction_group_names')
+  @field_validator('TransactionGroupNames')
   def group_names_must_not_be_empty(cls, v):
     if not v:
       raise ValueError('TransactionGroupNames must not be empty')
     return v
-  
-  @field_validator('correlation_id')
+
+  @field_validator('CorrelationId')
   def correlation_id_must_not_be_empty(cls, v):
     if not v:
       raise ValueError('CorrelationId must not be empty')
     return v
 
-  @field_validator('user_id')
+  @field_validator('UserId')
   def user_id_must_not_be_empty(cls, v):
     if not v:
       raise ValueError('UserId must not be empty')
