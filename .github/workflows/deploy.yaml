@@ -64,3 +64,4 @@ jobs:
               RABBITMQ_USER='${{ secrets.RABBITMQ_USER }}' \
               RABBITMQ_PASS='${{ secrets.RABBITMQ_PASS }}' \
               API_TOKEN='${{ secrets.API_TOKEN }}' \
+              MCP_API_BASE_URL='${{ vars.MCP_API_BASE_URL }}' \
