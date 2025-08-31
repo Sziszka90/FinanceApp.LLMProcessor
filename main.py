@@ -50,4 +50,4 @@ async def prompt_endpoint(
   messages = result.get('messages', [])
   last_message = messages[-1]
   last_message_content = getattr(last_message, 'content', '')
-  return {"result": last_message_content}
+  return {"Result": last_message_content}
