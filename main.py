@@ -7,6 +7,7 @@ from services.LLMService import LLMService
 from services.PromptService import PromptService
 from fastapi import FastAPI, Request
 from dependencies.global_exception_handler import global_exception_handler
+from fastapi.responses import JSONResponse
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -44,6 +45,8 @@ async def prompt_endpoint(
   llm_service: LLMService = Depends(get_llm_service)
 ):
   result = await llm_service.send_prompt_sync_process(request.Prompt, request.UserId, request.CorrelationId)
+  if not result:
+    return JSONResponse(status_code=500, content={"detail": "LLM returned no result"})
   messages = result.get('messages', [])
   last_message = messages[-1]
   last_message_content = getattr(last_message, 'content', '')

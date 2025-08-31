@@ -9,6 +9,8 @@ from services.abstraction.ILoggerService import ILoggerService
 from tools.abstraction.IToolFactory import IToolFactory
 from langchain.schema import SystemMessage
 
+from utils.camelcase import dict_to_camel
+
 class LLMService(ILLMService):
   def __init__(self, rabbitmq_client: IRabbitMqClient, logger: ILoggerService, tool_factory: IToolFactory):
     self.tool_factory = tool_factory
@@ -50,7 +52,7 @@ class LLMService(ILLMService):
       )
 
       message_dump = message.model_dump()
-      response = await self.agent.ainvoke(message_dump)
+      response = await self.agent.ainvoke(dict_to_camel(message_dump))
       messages = response.get('messages', [])
       last_message = messages[-1]
       result = getattr(last_message, 'content', '')
@@ -88,7 +90,7 @@ class LLMService(ILLMService):
         ]
       )
       message_dump = messages.model_dump()
-      result = await self.agent.ainvoke(message_dump)
+      result = await self.agent.ainvoke(dict_to_camel(message_dump))
 
     except Exception as e:
       self.logger.error(f"Error during ainvoke: {e}")
