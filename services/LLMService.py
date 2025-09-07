@@ -9,8 +9,6 @@ from services.abstraction.ILoggerService import ILoggerService
 from tools.abstraction.IToolFactory import IToolFactory
 from langchain.schema import SystemMessage
 
-from utils.camelcase import dict_to_camel
-
 class LLMService(ILLMService):
   def __init__(self, rabbitmq_client: IRabbitMqClient, logger: ILoggerService, tool_factory: IToolFactory):
     self.tool_factory = tool_factory
@@ -18,6 +16,7 @@ class LLMService(ILLMService):
     self.rabbitmq_client = rabbitmq_client
     self.logger = logger
     self.llm = init_chat_model("openai:gpt-4.1")
+    
     prompt = SystemMessage(
       content="""
       You are a helpful financial assistant in a finance application.
@@ -29,6 +28,7 @@ class LLMService(ILLMService):
       Return your response as a single-line string. Do not include any newline characters (\n) or line breaks.
       Never ask the user for clarification."""
     )
+
     self.agent = create_react_agent(
       model=self.llm,
       tools=self.tools,
