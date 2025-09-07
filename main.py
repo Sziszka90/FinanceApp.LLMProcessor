@@ -1,3 +1,4 @@
+from fastapi.responses import JSONResponse
 from fastapi import BackgroundTasks, Depends, FastAPI
 from fastapi.concurrency import asynccontextmanager
 from di.dependencies import authorize_token, get_llm_service, get_prompt_service, get_rabbitmq_client
@@ -51,3 +52,7 @@ async def prompt_endpoint(
   last_message = messages[-1]
   last_message_content = getattr(last_message, 'content', '')
   return {"Result": last_message_content}
+
+@app.post("/wakeup")
+async def wakeup():
+  return JSONResponse(content={"status": "success", "message": "Service is up"})
