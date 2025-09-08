@@ -1,4 +1,4 @@
-from models import MatchTransactionResponse
+from models.MatchTransactionResponse import MatchTransactionResponse
 from services.abstraction.IPromptService import IPromptService
 from langchain.output_parsers import PydanticOutputParser
 
