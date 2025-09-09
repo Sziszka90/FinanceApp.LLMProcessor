@@ -8,6 +8,7 @@ from services.abstraction.ILLMService import ILLMService
 from services.abstraction.ILoggerService import ILoggerService
 from tools.abstraction.IToolFactory import IToolFactory
 from langchain.schema import SystemMessage
+from models.MatchTransactionResponse import MatchTransactionResponse
 
 class LLMService(ILLMService):
   def __init__(self, rabbitmq_client: IRabbitMqClient, logger: ILoggerService, tool_factory: IToolFactory):
@@ -16,7 +17,7 @@ class LLMService(ILLMService):
     self.rabbitmq_client = rabbitmq_client
     self.logger = logger
     self.llm = init_chat_model("openai:gpt-4.1")
-    
+
     prompt = SystemMessage(
       content="""
       You are a helpful financial assistant in a finance application.
@@ -43,26 +44,32 @@ class LLMService(ILLMService):
       routing_key: str = None
     ):
 
-    try:
-      message = ChatMessages(
-        messages=[
-          ChatMessage(role="system", content="user_id: " + user_id + " correlation_id: " + correlation_id),
-          ChatMessage(role="user", content=prompt)
-        ]
-      )
+    message = ChatMessages(
+      messages=[
+        ChatMessage(role="system", content="user_id: " + user_id + " correlation_id: " + correlation_id),
+        ChatMessage(role="user", content=prompt)
+      ]
+    )
 
+    try:
       message_dump = message.model_dump()
       response = await self.agent.ainvoke(message_dump)
       messages = response.get('messages', [])
       last_message = messages[-1]
       result = getattr(last_message, 'content', '')
+    
+      try:
+        match_response = MatchTransactionResponse.model_validate_json(result)
+      except Exception as e:
+        self.logger.error(f"Error parsing MatchTransactionResponse: {e}")
+        match_response = None
 
-      message = Message(
+      message = Message[MatchTransactionResponse](
         CorrelationId=correlation_id,
         Success=True,
         UserId=user_id,
         Prompt=prompt,
-        Response=result
+        Response=match_response
       )
 
       message_json = message.model_dump()
@@ -70,7 +77,7 @@ class LLMService(ILLMService):
       self.logger.info(f"Successfully processed LLM request {correlation_id}")
 
     except Exception as e:
-      error_message = Message(
+      error_message = Message[str](
         CorrelationId=correlation_id,
         Success=False,
         UserId=user_id,
