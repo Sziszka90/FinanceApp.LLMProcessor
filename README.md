@@ -113,69 +113,9 @@ rabbitmq_config.json                    # Message queue configuration
 ### **Transaction Matching**
 
 ```http
-POST /match-transactions    # Process transaction categorization (requires Bearer token)
-```
-
-**Request Body:**
-
-```json
-{
-  "transaction_names": ["SPOTIFY PREMIUM", "TESCO GROCERIES", "SHELL PETROL"],
-  "transaction_group_names": [
-    "Entertainment",
-    "Groceries",
-    "Transportation",
-    "Utilities"
-  ],
-  "user_id": "user-123",
-  "correlation_id": "req-456"
-}
-```
-
-**Response:**
-
-```json
-{
-  "message": "Processing started",
-  "correlation_id": "req-456",
-  "status": "accepted"
-}
-```
-
-**AI Processing Result (published to RabbitMQ):**
-
-```json
-[
-  { "SPOTIFY PREMIUM": "Entertainment" },
-  { "TESCO GROCERIES": "Groceries" },
-  { "SHELL PETROL": "Transportation" }
-]
-```
-
-## 🚦 Getting Started
-
-### **Prerequisites**
-
-```bash
-# Required software
-Python 3.9+
-RabbitMQ Server
-OpenAI API Key
-```
-
-### **Local Development Setup**
-
-```bash
-# Clone the repository
-git clone https://github.com/Sziszka90/FinanceApp.LLMProcessor.git
-cd FinanceApp.LLMProcessor
-
-# Create virtual environment
-python -m venv env
-source env/bin/activate  # On Windows: env\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
+POST /llmprocessor/match-transactions    # Process transaction categorization (requires Bearer token)
+POST /llmprocessor/prompt                # Synchronous prompt processing (requires Bearer token)
+POST /wakeup                             # Wakeup endpoint
 ```
 
 ### **Environment Configuration**
@@ -188,6 +128,9 @@ LLM_API_KEY=your-openai-api-key
 
 # API Security
 API_TOKEN=your-secret-api-token
+
+# MCP endpoint
+MCP_API_BASE_URL=your-mcp-endpoint
 
 # RabbitMQ Configuration
 RABBITMQ_HOST=localhost
