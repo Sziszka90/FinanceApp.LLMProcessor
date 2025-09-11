@@ -1,6 +1,5 @@
 from typing import TypeVar, Generic
 from pydantic.generics import GenericModel
-
 from pydantic import Field, field_validator
 
 T = TypeVar("T")

@@ -4,9 +4,10 @@ from types import SimpleNamespace
 import json
 import aio_pika
 import asyncio
+from clients.abstraction.IRabbitMqClient import IRabbitMqClient
 from services.abstraction.ILoggerService import ILoggerService
 
-class RabbitMqClient:
+class RabbitMqClient(IRabbitMqClient):
   def __init__(self, logger: ILoggerService):
     self.logger = logger
 

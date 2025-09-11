@@ -1,9 +1,8 @@
 from pydantic import BaseModel, Field, field_validator
-from typing import Dict, Any
 
 class McpRequest(BaseModel):
 	ToolName: str = Field(..., min_length=1, description="The MCP tool to perform on the backend (tool name). Must be a non-empty string.")
-	Parameters: Dict[str, Any] = Field(..., description="A dictionary of parameters for the selected MCP tool. Must not be empty.")
+	Parameters: dict[str, any] = Field(..., description="A dictionary of parameters for the selected MCP tool. Must not be empty.")
 
 	@field_validator('ToolName')
 	def tool_name_must_not_be_empty(cls, v):

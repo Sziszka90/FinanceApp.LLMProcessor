@@ -4,6 +4,8 @@
 
 This is a Python-based microservice that provides intelligent transaction categorization using OpenAI's GPT-4. It receives transaction data via REST API, processes it through AI models, and publishes the results back to the message queue for consumption by the main finance application.
 
+🧠 **LangGraph Agent Orchestration** - The service uses LangGraph as the agent framework to orchestrate LLM-powered workflows, enabling advanced tool usage, structured output, and multi-step reasoning for financial queries.
+
 ### 🎯 Core Features
 
 ✅ **AI Transaction Matching** - Uses GPT-4 to categorize bank transactions into appropriate groups  
@@ -18,15 +20,50 @@ This is a Python-based microservice that provides intelligent transaction catego
 ### **Service Structure**
 
 ```
-📁 main.py                              # FastAPI application and endpoints
-📁 services/
-    └── llm_service.py                  # OpenAI GPT-4 integration
-📁 models/
-    └── MatchTransactionRequest.py      # Request/response models
-📁 tasks/
-    └── prompt_tasks.py                 # Background task processing
-📁 rabbitmq_publisher.py               # RabbitMQ message publishing
-📁 rabbitmq_config.json                # Message queue configuration
+main.py                        # FastAPI application and endpoints
+requirements.txt               # Python dependencies
+LLMProcessor.Dockerfile        # Docker setup
+rabbitmq_config.json           # Message queue configuration
+
+📁 clients/                    # API and messaging clients
+  McpClient.py                 # MCP API client
+  RabbitMqClient.py            # RabbitMQ client
+  📁 abstraction/              # Client interfaces
+
+📁 services/                   # Business logic and orchestration
+  LLMService.py                # LangGraph agent orchestration
+  PromptService.py           # Prompt generation logic
+  LoggerService.py           # Logging
+  TokenService.py            # Token validation
+  📁 abstraction/            # Service interfaces
+
+📁 models/                     # Pydantic request/response models
+  MatchTransactionRequest.py
+  MatchTransactionResponse.py
+  McpEnvelope.py
+  McpRequest.py
+  McpTopTransactionGroupsRequest.py
+  Message.py
+  ChatMessage.py
+  PromptRequest.py
+
+📁 tools/                      # Tool definitions and factories for LangGraph
+  ToolFactory.py
+  McpTool.py
+  📁 abstraction/            # Tool interfaces
+
+📁 di/                         # Dependency injection setup
+  AppModule.py
+  dependencies.py
+
+📁 dependencies/               # Global exception handler
+  global_exception_handler.py
+
+📁 utils/                      # Utility functions
+  camelcase.py
+
+📁 .github/workflows/          # CI/CD pipeline
+  deploy.yaml
 ```
 
 ### **Key Patterns**
@@ -44,6 +81,8 @@ This is a Python-based microservice that provides intelligent transaction catego
 - **FastAPI** - Modern, fast web framework with automatic OpenAPI documentation
 - **Uvicorn** - Lightning-fast ASGI server for production deployment
 - **Pydantic** - Data validation and settings management using Python type annotations
+- **LangGraph** - Agent orchestration framework for LLM-powered workflows
+- **LangChain** - LLM orchestration, prompt engineering, and tool integration
 - **OpenAI** - Official Python client for GPT-4 integration
 - **aio_pika** - Async RabbitMQ client for reliable message processing
 - **httpx** - Modern async HTTP client for external API calls
@@ -52,6 +91,7 @@ This is a Python-based microservice that provides intelligent transaction catego
 
 - **OpenAI GPT-4** - Advanced language model for intelligent transaction categorization
 - **Prompt Engineering** - Optimized prompts for financial transaction analysis
+- **Async Processing** - Non-blocking AI inference for high throughput
 - **Async Processing** - Non-blocking AI inference for high throughput
 
 ### **Message Queuing & Communication**
@@ -197,15 +237,6 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 # http://localhost:8000
 # API Documentation: http://localhost:8000/docs
 ```
-
-## 🔄 Message Flow
-
-1. **API Request** - Client sends transaction data to `/match-transactions` endpoint
-2. **Authentication** - Bearer token validation ensures secure access
-3. **Background Processing** - FastAPI background task processes the request
-4. **AI Analysis** - GPT-4 analyzes transactions and suggests categories
-5. **Result Publishing** - Categorized results published to RabbitMQ
-6. **Consumer Processing** - Main finance app consumes results for database updates
 
 ## 🐳 Docker Deployment
 
