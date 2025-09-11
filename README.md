@@ -20,50 +20,50 @@ This is a Python-based microservice that provides intelligent transaction catego
 ### **Service Structure**
 
 ```
-main.py                        # FastAPI application and endpoints
-requirements.txt               # Python dependencies
-LLMProcessor.Dockerfile        # Docker setup
-rabbitmq_config.json           # Message queue configuration
+main.py                                 # FastAPI application and endpoints
+requirements.txt                        # Python dependencies
+LLMProcessor.Dockerfile                 # Docker setup
+rabbitmq_config.json                    # Message queue configuration
 
-📁 clients/                    # API and messaging clients
-  McpClient.py                 # MCP API client
-  RabbitMqClient.py            # RabbitMQ client
-  📁 abstraction/              # Client interfaces
+📁 clients/                             # API and messaging clients
+  McpClient.py                          # MCP API client
+  RabbitMqClient.py                     # RabbitMQ client
+  📁 abstraction/                       # Client interfaces
 
-📁 services/                   # Business logic and orchestration
-  LLMService.py                # LangGraph agent orchestration
-  PromptService.py           # Prompt generation logic
-  LoggerService.py           # Logging
-  TokenService.py            # Token validation
-  📁 abstraction/            # Service interfaces
+📁 services/                            # Business logic and orchestration
+  LLMService.py                         # LangGraph agent orchestration
+  PromptService.py                      # Prompt generation logic
+  LoggerService.py                      # Logging
+  TokenService.py                       # Token validation
+  📁 abstraction/                       # Service interfaces
 
-📁 models/                     # Pydantic request/response models
-  MatchTransactionRequest.py
-  MatchTransactionResponse.py
-  McpEnvelope.py
-  McpRequest.py
-  McpTopTransactionGroupsRequest.py
-  Message.py
-  ChatMessage.py
-  PromptRequest.py
+📁 models/                              # Pydantic request/response models
+  MatchTransactionRequest.py            # Request model
+  MatchTransactionResponse.py           # Response model
+  McpEnvelope.py                        # Envelope model
+  McpRequest.py                         # MCP request model
+  McpTopTransactionGroupsRequest.py     # Top transaction groups request
+  Message.py                            # Generic message model
+  ChatMessage.py                        # Chat message model
+  PromptRequest.py                      # Prompt request model
 
-📁 tools/                      # Tool definitions and factories for LangGraph
-  ToolFactory.py
-  McpTool.py
-  📁 abstraction/            # Tool interfaces
+📁 tools/                               # Tool definitions and factories for LangGraph
+  ToolFactory.py                        # Tool factory
+  McpTool.py                            # MCP tool
+  📁 abstraction/                       # Tool interfaces
 
-📁 di/                         # Dependency injection setup
-  AppModule.py
-  dependencies.py
+📁 di/                                  # Dependency injection setup
+  AppModule.py                          # DI module
+  dependencies.py                       # DI dependencies
 
-📁 dependencies/               # Global exception handler
-  global_exception_handler.py
+📁 dependencies/                        # Global exception handler
+  global_exception_handler.py           # Exception handler
 
-📁 utils/                      # Utility functions
-  camelcase.py
+📁 utils/                               # Utility functions
+  camelcase.py                          # CamelCase converter
 
-📁 .github/workflows/          # CI/CD pipeline
-  deploy.yaml
+📁 .github/workflows/                   # CI/CD pipeline
+  deploy.yaml                           # Deployment workflow
 ```
 
 ### **Key Patterns**
