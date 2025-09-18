@@ -23,6 +23,7 @@ class LLMService(ILLMService):
       You are a helpful financial assistant in a finance application.
       Use the following tools to assist with financial queries.
       Always think step-by-step and use the tools when necessary.
+      If empty list is returned it means no relevant information is found.
       If you don't know the answer, just say you don't know. Do not make up an answer.
       If information is missing, make the best assumption and proceed.
       I always send the user_id and correlation_id in system message. These are only for internal use never to be shared with the user.
@@ -65,11 +66,11 @@ class LLMService(ILLMService):
         match_response = None
 
       message = Message[MatchTransactionResponse](
-        CorrelationId=correlation_id,
-        Success=True,
-        UserId=user_id,
-        Prompt=prompt,
-        Response=match_response
+        correlation_id=correlation_id,
+        success=True,
+        user_id=user_id,
+        prompt=prompt,
+        response=match_response
       )
 
       message_json = message.model_dump()
@@ -78,11 +79,11 @@ class LLMService(ILLMService):
 
     except Exception as e:
       error_message = Message[str](
-        CorrelationId=correlation_id,
-        Success=False,
-        UserId=user_id,
-        Prompt=prompt,
-        Error=str(e)
+        correlation_id=correlation_id,
+        success=False,
+        user_id=user_id,
+        prompt=prompt,
+        error=str(e)
       )
       
       await self.rabbitmq_client.publish_async(exchange, routing_key, error_message)

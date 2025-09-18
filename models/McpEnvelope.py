@@ -1,17 +1,18 @@
+from typing import Any
 from pydantic import BaseModel, Field, field_validator
 
 class McpEnvelope(BaseModel):
-	ToolName: str = Field(..., min_length=1, description="Name of the MCP tool executed.")
-	Payload: any = Field(..., description="Payload returned by the MCP tool.")
+	tool_name: str = Field(..., min_length=1, description="Name of the MCP tool executed.", alias="ToolName")
+	payload: Any = Field(..., description="Payload returned by the MCP tool.", alias="Payload")
 
-	@field_validator('ToolName')
+	@field_validator('tool_name')
 	def tool_name_must_not_be_empty(cls, v):
 		if not v or not v.strip():
-			raise ValueError('Tool must be a non-empty string')
+			raise ValueError('tool_name must be a non-empty string')
 		return v
 
-	@field_validator('Payload')
+	@field_validator('payload')
 	def payload_must_exist(cls, v):
 		if v is None:
-			raise ValueError('Payload must not be None')
+			raise ValueError('payload must not be None')
 		return v

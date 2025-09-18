@@ -1,24 +1,24 @@
 from pydantic import BaseModel, Field, field_validator
 
 class PromptRequest(BaseModel):
-  Prompt: str = Field(...)
-  UserId: str = Field(None)
-  CorrelationId: str = Field(...)
+  prompt: str = Field(..., alias="prompt")
+  user_id: str = Field(None, alias="userId")
+  correlation_id: str = Field(..., alias="correlationId")
 
-  @field_validator('Prompt')
+  @field_validator('prompt')
   def prompt_must_not_be_empty(cls, v):
     if not v:
-      raise ValueError('Prompt must not be empty')
+      raise ValueError('prompt must not be empty')
     return v
 
-  @field_validator('UserId')
+  @field_validator('user_id')
   def user_id_must_not_be_empty(cls, v):
     if not v:
-      raise ValueError('UserId must not be empty')
+      raise ValueError('user_id must not be empty')
     return v
 
-  @field_validator('CorrelationId')
+  @field_validator('correlation_id')
   def correlation_id_must_not_be_empty(cls, v):
     if not v:
-      raise ValueError('CorrelationId must not be empty')
+      raise ValueError('correlation_id must not be empty')
     return v
