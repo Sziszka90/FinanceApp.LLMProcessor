@@ -2,8 +2,8 @@ from typing import Any
 from pydantic import BaseModel, Field, field_validator
 
 class McpEnvelope(BaseModel):
-	tool_name: str = Field(..., min_length=1, description="Name of the MCP tool executed.", alias="ToolName")
-	payload: Any = Field(..., description="Payload returned by the MCP tool.", alias="Payload")
+	tool_name: str = Field(..., min_length=1, description="Name of the MCP tool executed.", alias="toolName")
+	payload: Any = Field(..., description="Payload returned by the MCP tool.", alias="payload")
 
 	@field_validator('tool_name')
 	def tool_name_must_not_be_empty(cls, v):
