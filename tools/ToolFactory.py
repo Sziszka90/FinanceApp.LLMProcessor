@@ -46,6 +46,9 @@ class ToolFactory(IToolFactory):
     startDate: The start date for the transaction groups query.
     endDate: The end date for the transaction groups query.
     top: The maximum number of transaction groups to return.
+    It returns a JSON string representing the MCP response.
+    TransactionGroups is a list of objects containing transaction group details.
+    BaseCurrency is the currency code for the amounts, use this to represent the currency.
     """
     return StructuredTool.from_function(
       func=mcp_tool_runner,
