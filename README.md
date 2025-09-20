@@ -1,19 +1,25 @@
-# 🤖 LLM Processor Service
+# 💼 Finance App - LLM Processor
 
-📦 **AI-powered transaction categorization microservice for Personal Finance App**
+## 📦 A sophisticated personal finance management platform with intelligent transaction processing
 
-This is a Python-based microservice that provides intelligent transaction categorization using OpenAI's GPT-4. It receives transaction data via REST API, processes it through AI models, and publishes the results back to the message queue for consumption by the main finance application.
+This is a Python-based microservice that provides intelligent transaction categorization and processing using OpenAI's GPT-4. It receives transaction data via REST API, processes it through AI models, and publishes the results back to the message queue for consumption by the main finance application. The service also able to call MCP endpoint allowing you to use backend tools via **LangChain**. This enables advanced financial operations, such as transaction group analysis and custom tool execution, directly from LLM-powered workflows.
 
-🧠 **LangGraph Agent Orchestration** - The service uses LangGraph as the agent framework to orchestrate LLM-powered workflows, enabling advanced tool usage, structured output, and multi-step reasoning for financial queries.
+## 🎯 Current Features
 
-### 🎯 Core Features
+✅ **AI Transaction Matching** 
+  - Uses GPT-4 to categorize bank transactions into appropriate groups
 
-✅ **AI Transaction Matching** - Uses GPT-4 to categorize bank transactions into appropriate groups  
-✅ **FastAPI Framework** - Modern, fast web framework with automatic API documentation  
-✅ **Async Message Processing** - RabbitMQ integration with aio_pika for reliable message handling  
-✅ **Token-based Authentication** - Secure API access with Bearer token validation  
-✅ **Background Task Processing** - Non-blocking AI processing with FastAPI background tasks  
-✅ **Robust Error Handling** - Retry mechanisms and connection resilience
+✅ **Async Message Processing** 
+  - RabbitMQ integration with aio_pika for reliable message handling  
+
+✅ **Token-based Authentication**
+  - Secure API access with Bearer token validation
+
+✅ **Background Task Processing**
+  - Non-blocking AI processing with FastAPI background tasks  
+
+✅ **Robust Error Handling** 
+  - Retry mechanisms and connection resilience
 
 ## 🏗️ Architecture
 
@@ -90,27 +96,8 @@ rabbitmq_config.json                    # Message queue configuration
 ### **AI & Machine Learning**
 
 - **OpenAI GPT-4** - Advanced language model for intelligent transaction categorization
-- **Prompt Engineering** - Optimized prompts for financial transaction analysis
-- **Async Processing** - Non-blocking AI inference for high throughput
-- **Async Processing** - Non-blocking AI inference for high throughput
-
-### **Message Queuing & Communication**
-
-- **RabbitMQ** - Reliable message broker with persistent queues
-- **aio_pika** - Async Python client for RabbitMQ integration
-- **Exchange-based routing** - Flexible message routing with exchanges and bindings
-- **Retry mechanisms** - Robust error handling with exponential backoff
-
-### **Infrastructure & Security**
-
-- **Bearer Token Authentication** - Secure API access control
-- **Environment Configuration** - Secure credential management
-- **Health Monitoring** - Connection health checks and automatic recovery
-- **Docker Support** - Containerized deployment ready
 
 ## 🔧 API Endpoints
-
-### **Transaction Matching**
 
 ```http
 POST /llmprocessor/match-transactions    # Process transaction categorization (requires Bearer token)
@@ -118,108 +105,18 @@ POST /llmprocessor/prompt                # Synchronous prompt processing (requir
 POST /wakeup                             # Wakeup endpoint
 ```
 
-### **Environment Configuration**
+## 🚀 Deployment
 
-Create a `.env` file or set environment variables:
+### **Azure Container Apps**
 
-```bash
-# OpenAI Configuration
-LLM_API_KEY=your-openai-api-key
+The application is deployed as **containerized microservices** on **Azure Container Apps** using GitHub Actions.
 
-# API Security
-API_TOKEN=your-secret-api-token
+**Deployment Flow:**
 
-# MCP endpoint
-MCP_API_BASE_URL=your-mcp-endpoint
-
-# RabbitMQ Configuration
-RABBITMQ_HOST=localhost
-RABBITMQ_PORT=5672
-RABBITMQ_USER=guest
-RABBITMQ_PASS=guest
-```
-
-### **RabbitMQ Configuration**
-
-The service requires RabbitMQ with specific exchanges and queues defined in `rabbitmq_config.json`:
-
-```json
-{
-  "RabbitMqSettings": {
-    "Exchanges": [
-      {
-        "ExchangeName": "transactions.exchange",
-        "ExchangeType": "direct"
-      }
-    ],
-    "Queues": ["transactions.matched"],
-    "Bindings": [
-      {
-        "Exchange": "transactions.exchange",
-        "Queue": "transactions.matched",
-        "RoutingKey": "transactions.matched"
-      }
-    ],
-    "RoutingKeys": {
-      "TransactionsMatched": {
-        "RoutingKey": "transactions.matched",
-        "ExchangeName": "transactions.exchange"
-      }
-    }
-  }
-}
-```
-
-### **Running the Service**
-
-```bash
-# Start the FastAPI server
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
-
-# The API will be available at:
-# http://localhost:8000
-# API Documentation: http://localhost:8000/docs
-```
-
-## 🐳 Docker Deployment
-
-### **Dockerfile**
-
-```dockerfile
-FROM python:3.11-slim
-
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY . .
-EXPOSE 8000
-
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-```
-
-### **Docker Compose**
-
-```yaml
-version: "3.8"
-services:
-  llm-processor:
-    build: .
-    ports:
-      - "8000:8000"
-    environment:
-      - LLM_API_KEY=${LLM_API_KEY}
-      - API_TOKEN=${API_TOKEN}
-      - RABBITMQ_HOST=rabbitmq
-    depends_on:
-      - rabbitmq
-
-  rabbitmq:
-    image: rabbitmq:3-management
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-```
+1. **Push to main** → Triggers GitHub Actions workflow
+2. **Bundle** → Creates production build
+3. **Deploy** → Updates hosting platform with new version
+4. **Verify** → Automated health checks ensure successful deployment
 
 ## 🤝 Contributing
 
