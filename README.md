@@ -21,6 +21,10 @@ This is a Python-based microservice that provides intelligent transaction catego
 ✅ **Robust Error Handling** 
   - Retry mechanisms and connection resilience
 
+## 🔮 Upcoming Features
+
+For detailed upcoming features and development progress, please check our [GitHub Issues](https://github.com/Sziszka90/FinanceApp.LLMProcessor/issues).
+
 ## 🏗️ Architecture
 
 ### **Service Structure**
@@ -80,7 +84,7 @@ rabbitmq_config.json                    # Message queue configuration
 - **Background Processing** - FastAPI background tasks for AI processing
 - **Retry Patterns** - Robust error handling with exponential backoff
 
-## 🚀 Tech Stack
+## 💻 Tech Stack
 
 ### **Python Framework & Libraries**
 
