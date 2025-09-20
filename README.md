@@ -101,7 +101,7 @@ rabbitmq_config.json                    # Message queue configuration
 
 - **OpenAI GPT-4** - Advanced language model for intelligent transaction categorization
 
-## 🔧 API Endpoints
+## 📋 API Documentation
 
 ```http
 POST /llmprocessor/match-transactions    # Process transaction categorization (requires Bearer token)
