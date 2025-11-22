@@ -55,8 +55,13 @@ class AppModule(Module):
 
   @singleton
   @provider
-  def create_llm_service(self, rabbitmq_client: IRabbitMqClient, tool_factory: IToolFactory, logger: ILoggerService) -> ILLMService:
-    return LLMService(rabbitmq_client=rabbitmq_client, tool_factory=tool_factory, logger=logger)
+  def create_llm_service(
+    self, 
+    rabbitmq_client: IRabbitMqClient, 
+    tool_factory: IToolFactory, 
+    logger: ILoggerService,
+    prompt_service: IPromptService) -> ILLMService:
+    return LLMService(rabbitmq_client=rabbitmq_client, tool_factory=tool_factory, logger=logger, prompt_service=prompt_service)
 
   @singleton
   @provider

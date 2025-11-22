@@ -10,6 +10,8 @@ from services.abstraction.ILoggerService import ILoggerService
 class RabbitMqClient(IRabbitMqClient):
   def __init__(self, logger: ILoggerService):
     self.logger = logger
+    self.connection = None
+    self.channel = None
 
     self.host = os.getenv("RABBITMQ_HOST", "localhost")
     self.port = int(os.getenv("RABBITMQ_PORT", 5672))
@@ -20,37 +22,41 @@ class RabbitMqClient(IRabbitMqClient):
       self.rabbitmq_config = json.load(f, object_hook=lambda d: SimpleNamespace(**d))
 
   async def initialize_async(self, max_retries: int = 5, base_wait: int = 5):
+
+    if self.connection and not self.connection.is_closed:
+      return self.connection, self.channel
+
     attempt = 0
 
     while attempt < max_retries:
       try:
-        connection = await aio_pika.connect_robust(
+        self.connection = await aio_pika.connect_robust(
           host=self.host,
           port=self.port,
           virtualhost="/",
           login=self.user,
           password=self.password,
         )
-        channel = await connection.channel()
+        self.channel = await self.connection.channel()
 
         for exchange in self.rabbitmq_config.RabbitMqSettings.Exchanges:
-          await channel.declare_exchange(
+          await self.channel.declare_exchange(
             exchange.ExchangeName,
             type=exchange.ExchangeType,
             durable=True
           )
 
         for queue in self.rabbitmq_config.RabbitMqSettings.Queues:
-          await channel.declare_queue(queue, durable=True)
+          await self.channel.declare_queue(queue, durable=True)
 
         for binding in self.rabbitmq_config.RabbitMqSettings.Bindings:
-          exch = await channel.get_exchange(binding.Exchange)
-          q = await channel.get_queue(binding.Queue)
+          exch = await self.channel.get_exchange(binding.Exchange)
+          q = await self.channel.get_queue(binding.Queue)
           await q.bind(exch, routing_key=binding.RoutingKey)
 
         self.logger.info("RabbitMQ async connection established")
         
-        return connection, channel
+        return self.connection, self.channel
       
       except Exception as e:
         attempt += 1
@@ -68,13 +74,14 @@ class RabbitMqClient(IRabbitMqClient):
 
     while attempt < max_retries:
       try:
-        connection, channel = await self.initialize_async()
-        exch = await channel.get_exchange(exchange)
+        # Ensure connection is ready
+        await self.initialize_async()
+        
+        exch = await self.channel.get_exchange(exchange)
         await exch.publish(
           aio_pika.Message(body=json.dumps(message).encode()),
           routing_key=routing_key
         )
-        await connection.close()
 
         self.logger.info(f"Message published to exchange {exchange} with routing key {routing_key}")
         

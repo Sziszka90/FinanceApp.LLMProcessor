@@ -25,13 +25,12 @@ def match_transactions_endpoint(
   request: MatchTransactionRequest,
   background_tasks: BackgroundTasks,
   authorization: str = Depends(authorize_token),
-  prompt_service: PromptService = Depends(get_prompt_service),
   llm_service: LLMService = Depends(get_llm_service),
   rabbitmq_client = Depends(get_rabbitmq_client)
 ):
-  prompt = prompt_service.get_matched_transactions_prompt(transaction_names=request.transaction_names, transaction_group_names=request.transaction_group_names)
-  return llm_service.send_prompt_async_process(
-    prompt=prompt,
+  return llm_service.match_transactions_async(
+    transactions=request.transaction_names,
+    transaction_groups=request.transaction_group_names,
     user_id=request.user_id,
     correlation_id=request.correlation_id,
     routing_key=rabbitmq_client.rabbitmq_config.RabbitMqSettings.RoutingKeys.TransactionsMatched.RoutingKey,
@@ -45,7 +44,7 @@ async def prompt_endpoint(
   authorization: str = Depends(authorize_token),
   llm_service: LLMService = Depends(get_llm_service)
 ):
-  result = await llm_service.send_prompt_sync_process(request.prompt, request.user_id, request.correlation_id)
+  result = await llm_service.send_prompt(request.prompt, request.user_id, request.correlation_id)
   if not result:
     return JSONResponse(status_code=500, content={"detail": "LLM returned no result"})
   messages = result.get('messages', [])

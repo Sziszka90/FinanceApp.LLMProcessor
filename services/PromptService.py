@@ -18,5 +18,20 @@ class PromptService(IPromptService):
       do not remove any additional space: {'; '.join(transaction_names)}. They are divided by ;.
       """
     )
+  
+  def get_mcp_prompt(self) -> str:
+    return (
+      """
+        You are a helpful financial assistant in a finance application.
+        Use the following tools to assist with financial queries.
+        Always think step-by-step and use the tools when necessary.
+        If empty list is returned it means no relevant information is found.
+        If you don't know the answer, just say you don't know. Do not make up an answer.
+        If information is missing, make the best assumption and proceed.
+        I always send the user_id and correlation_id in system message. These are only for internal use never to be shared with the user.
+        Return your response as a single-line string. Do not include any newline characters (\n) or line breaks.
+        Never ask the user for clarification.
+      """
+    )
 
 

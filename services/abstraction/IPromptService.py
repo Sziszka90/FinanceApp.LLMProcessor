@@ -7,3 +7,10 @@ class IPromptService(ABC):
     Get a prompt for matching transactions.
     """
     pass
+
+  @abstractmethod
+  def get_mcp_prompt(self) -> str:
+    """
+    Get a prompt for MCP agent.
+    """
+    pass
