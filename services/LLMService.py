@@ -4,6 +4,7 @@ from langgraph.prebuilt import create_react_agent
 from clients.abstraction.IRabbitMqClient import IRabbitMqClient
 from models.Message import Message
 from models.ChatMessage import ChatMessage, ChatMessages
+from repositories.abstraction.IMatchTransactionRepository import IMatchTransactionRepository
 from services.abstraction.ILLMService import ILLMService
 from services.abstraction.ILoggerService import ILoggerService
 from services.abstraction.IPromptService import IPromptService
@@ -16,12 +17,14 @@ class LLMService(ILLMService):
       rabbitmq_client: IRabbitMqClient, 
       logger: ILoggerService, 
       tool_factory: IToolFactory,
-      prompt_service: IPromptService):
+      prompt_service: IPromptService,
+      matchTransactionRepository: IMatchTransactionRepository):
     self.tool_factory = tool_factory
     self.tools = self.tool_factory.create_tools()
     self.rabbitmq_client = rabbitmq_client
     self.logger = logger
     self.prompt_service = prompt_service
+    self.matchTransactionRepository = matchTransactionRepository
     self.llm = init_chat_model("openai:gpt-4.1")
 
   async def match_transactions(
@@ -60,16 +63,24 @@ class LLMService(ILLMService):
     
       try:
         match_response = MatchTransactionResponse.model_validate_json(result)
+        
+        if match_response and match_response.transactions:
+          try:
+            await self.matchTransactionRepository.save_match_transactions(
+              match_response.transactions
+            )
+            self.logger.info(f"Saved {len(match_response.transactions)} transaction matches to database")
+          except Exception as db_error:
+            self.logger.error(f"Error saving matches to database: {db_error}")
+            
       except Exception as e:
         self.logger.error(f"Error parsing MatchTransactionResponse: {e}")
-        match_response = None
 
       message = Message[MatchTransactionResponse](
         correlation_id=correlation_id,
         success=True,
         user_id=user_id,
         prompt=matching_prompt,
-        response=match_response
       )
 
       message_json = message.model_dump()
