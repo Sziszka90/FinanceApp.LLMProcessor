@@ -1,6 +1,6 @@
 from models.MatchTransactionResponse import MatchTransactionResponse
 from services.abstraction.IPromptService import IPromptService
-from langchain.output_parsers import PydanticOutputParser
+from langchain_core.output_parsers import PydanticOutputParser
 
 class PromptService(IPromptService):
   def get_matched_transactions_prompt(self, transaction_names: list[str], transaction_group_names: list[str]) -> str:

@@ -6,6 +6,7 @@ httpx
 langgraph
 langchain
 langchain-openai
+langchain-core
 requests
 sqlalchemy[asyncio]
 aioodbc
