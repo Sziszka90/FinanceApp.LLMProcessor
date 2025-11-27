@@ -5,6 +5,8 @@ import urllib.parse
 import logging
 import time
 
+# Configure logging for this module
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 CONNECTION_STRING = os.getenv("CONNECTION_STRING")
@@ -12,7 +14,9 @@ CONNECTION_STRING = os.getenv("CONNECTION_STRING")
 def parse_connection_string(conn_str: str) -> str:
     """Parse SQL Server connection string to async SQLAlchemy format"""
     # Small delay to ensure environment is fully loaded
-    time.sleep(5)
+    time.sleep(20)
+    
+    logger.info(f"Raw connection string: {conn_str}")
     
     params = {}
     for part in conn_str.split(';'):
