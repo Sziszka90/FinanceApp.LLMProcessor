@@ -22,7 +22,8 @@ def parse_connection_string(conn_str: str) -> str:
     for part in conn_str.split(';'):
         if '=' in part:
             key, value = part.split('=', 1)
-            params[key.strip()] = value.strip()
+            # Strip whitespace and quotes
+            params[key.strip()] = value.strip().strip('"').strip("'")
     
     server = params.get('Server', 'localhost')
     host, port = (server.split(',') + ['1433'])[:2]
