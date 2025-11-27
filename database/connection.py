@@ -16,6 +16,9 @@ def parse_connection_string(conn_str: str) -> str:
     # Small delay to ensure environment is fully loaded
     time.sleep(20)
     
+    # Strip quotes from the entire connection string first
+    conn_str = conn_str.strip().strip('"').strip("'")
+    
     logger.info(f"Raw connection string: {conn_str}")
     
     params = {}
@@ -26,6 +29,7 @@ def parse_connection_string(conn_str: str) -> str:
             params[key.strip()] = value.strip().strip('"').strip("'")
     
     server = params.get('Server', 'localhost')
+    logger.info(f"Server value from params: {server}")
     host, port = (server.split(',') + ['1433'])[:2]
     
     database = params.get('Database', 'FinanceAppDB')
