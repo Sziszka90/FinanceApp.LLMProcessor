@@ -1,18 +1,38 @@
 import os
 from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+import urllib.parse
 
 CONNECTION_STRING = os.getenv(
     "CONNECTION_STRING",
     "Server=localhost,1433;Database=FinanceAppDB;User=FinanceAppDB_Login;Password=Secret12345!;Encrypt=False;"
 )
 
+def parse_connection_string(conn_str: str) -> str:
+    """Parse SQL Server connection string to async SQLAlchemy format"""
+    params = {}
+    for part in conn_str.split(';'):
+        if '=' in part:
+            key, value = part.split('=', 1)
+            params[key.strip()] = value.strip()
+    
+    server = params.get('Server', 'localhost')
+    host, port = (server.split(',') + ['1433'])[:2]
+    
+    database = params.get('Database', 'FinanceAppDB')
+    user = params.get('User', 'FinanceAppDB_Login')
+    password = params.get('Password', 'Secret12345!')
+    
+    # URL encode password to handle special characters like !
+    encoded_password = urllib.parse.quote_plus(password)
+    
+    return (
+        f"mssql+aioodbc://{user}:{encoded_password}@{host}:{port}/{database}"
+        "?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes"
+    )
+
 # Convert SQL Server connection string to async format with aioodbc
-# mssql+aioodbc://user:password@host:port/database?driver=ODBC+Driver+18+for+SQL+Server
-ASYNC_CONNECTION_STRING = (
-    "mssql+aioodbc://FinanceAppDB_Login:Secret12345!@localhost:1433/FinanceAppDB"
-    "?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes"
-)
+ASYNC_CONNECTION_STRING = parse_connection_string(CONNECTION_STRING)
 
 engine = create_async_engine(
     ASYNC_CONNECTION_STRING,
