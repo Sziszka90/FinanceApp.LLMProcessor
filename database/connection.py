@@ -2,6 +2,9 @@ import os
 from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 import urllib.parse
+import logging
+
+logger = logging.getLogger(__name__)
 
 CONNECTION_STRING = os.getenv(
     "CONNECTION_STRING",
@@ -25,6 +28,9 @@ def parse_connection_string(conn_str: str) -> str:
     
     # URL encode password to handle special characters like !
     encoded_password = urllib.parse.quote_plus(password)
+    
+    # Log connection details (without password)
+    logger.info(f"Database connection: host={host}, port={port}, database={database}, user={user}")
     
     return (
         f"mssql+aioodbc://{user}:{encoded_password}@{host}:{port}/{database}"
