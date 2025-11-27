@@ -3,16 +3,17 @@ from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 import urllib.parse
 import logging
+import time
 
 logger = logging.getLogger(__name__)
 
-CONNECTION_STRING = os.getenv(
-    "CONNECTION_STRING",
-    "Server=localhost,1433;Database=FinanceAppDB;User=FinanceAppDB_Login;Password=Secret12345!;Encrypt=False;"
-)
+CONNECTION_STRING = os.getenv("CONNECTION_STRING")
 
 def parse_connection_string(conn_str: str) -> str:
     """Parse SQL Server connection string to async SQLAlchemy format"""
+    # Small delay to ensure environment is fully loaded
+    time.sleep(5)
+    
     params = {}
     for part in conn_str.split(';'):
         if '=' in part:
