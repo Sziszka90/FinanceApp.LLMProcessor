@@ -11,29 +11,19 @@ class MatchTransactionRepository(IMatchTransactionRepository):
         self.db = db
         self.logger = logger
 
-    async def save_match_transaction(self, transaction: str, transaction_group: str) -> MatchTransaction:
+    async def save_match_transaction(self, transaction: str, transaction_group: str, correlation_id: str) -> MatchTransaction:
         """Save a single transaction match to the database."""
         try:
-            stmt = select(MatchTransaction).where(MatchTransaction.Transaction == transaction)
-            result = await self.db.execute(stmt)
-            existing = result.scalar_one_or_none()
-            
-            if existing:
-                existing.TransactionGroup = transaction_group
-                await self.db.commit()
-                await self.db.refresh(existing)
-                self.logger.info(f"Updated transaction match: {transaction} -> {transaction_group}")
-                return existing
-            else:
-                match = MatchTransaction(
-                    Transaction=transaction,
-                    TransactionGroup=transaction_group
-                )
-                self.db.add(match)
-                await self.db.commit()
-                await self.db.refresh(match)
-                self.logger.info(f"Saved transaction match: {transaction} -> {transaction_group}")
-                return match
+            match = MatchTransaction(
+                Transaction=transaction,
+                TransactionGroup=transaction_group,
+                CorrelationId = correlation_id
+            )
+            self.db.add(match)
+            await self.db.commit()
+            await self.db.refresh(match)
+            self.logger.info(f"Saved transaction match: {transaction} -> {transaction_group}")
+            return match
                 
         except IntegrityError as e:
             await self.db.rollback()
@@ -44,13 +34,13 @@ class MatchTransactionRepository(IMatchTransactionRepository):
             self.logger.error(f"Unexpected error saving transaction match: {e}")
             raise
 
-    async def save_match_transactions(self, matches: dict[str, str]) -> List[MatchTransaction]:
+    async def save_match_transactions(self, matches: dict[str, str], correlation_id: str) -> List[MatchTransaction]:
         """Save multiple transaction matches to the database."""
         saved_matches = []
         
         try:
             for transaction, transaction_group in matches.items():
-                match = await self.save_match_transaction(transaction, transaction_group)
+                match = await self.save_match_transaction(transaction, transaction_group, correlation_id)
                 saved_matches.append(match)
             
             self.logger.info(f"Saved {len(saved_matches)} transaction matches")

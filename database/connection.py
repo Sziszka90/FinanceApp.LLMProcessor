@@ -28,13 +28,13 @@ def parse_connection_string(conn_str: str) -> str:
             # Strip whitespace and quotes
             params[key.strip()] = value.strip().strip('"').strip("'")
     
-    server = params.get('Server', 'localhost')
+    server = params.get('Server')
     logger.info(f"Server value from params: {server}")
     host, port = (server.split(',') + ['1433'])[:2]
     
-    database = params.get('Database', 'FinanceAppDB')
-    user = params.get('User', 'FinanceAppDB_Login')
-    password = params.get('Password', 'Secret12345!')
+    database = params.get('Database')
+    user = params.get('User')
+    password = params.get('Password')
     
     # URL encode password to handle special characters like !
     encoded_password = urllib.parse.quote_plus(password)

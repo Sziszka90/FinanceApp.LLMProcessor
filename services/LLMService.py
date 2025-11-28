@@ -67,7 +67,8 @@ class LLMService(ILLMService):
         if match_response and match_response.transactions:
           try:
             await self.matchTransactionRepository.save_match_transactions(
-              match_response.transactions
+              match_response.transactions,
+              correlation_id
             )
             self.logger.info(f"Saved {len(match_response.transactions)} transaction matches to database")
           except Exception as db_error:
