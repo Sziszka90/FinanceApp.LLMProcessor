@@ -13,56 +13,45 @@ on:
         default: "production"
 
 jobs:
-  build-and-push:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Log in to GitHub Container Registry (PAT)
-        run: echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Build Docker image
         run: |
           OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           docker build -t ghcr.io/$OWNER/finance-app-llmprocessor:${GITHUB_RUN_NUMBER} -f ./LLMProcessor.Dockerfile .
 
+      - name: Save Docker image
+        run: |
+          OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          docker save ghcr.io/$OWNER/finance-app-llmprocessor:${GITHUB_RUN_NUMBER} -o llmprocessor-image.tar
+
+      - name: Upload Docker image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image
+          path: llmprocessor-image.tar
+          retention-days: 1
+
+  push:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download Docker image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image
+
+      - name: Load Docker image
+        run: docker load -i llmprocessor-image.tar
+
+      - name: Log in to GitHub Container Registry (PAT)
+        run: echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
       - name: Push Docker image
         run: |
           OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           docker push ghcr.io/$OWNER/finance-app-llmprocessor:${GITHUB_RUN_NUMBER}
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: [build-and-push]
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
-
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Upgrade Azure Container Apps extension
-        run: |
-          az extension add --name containerapp --upgrade --yes
-
-      - name: Update Azure Container App (LLM Processor)
-        run: |
-          set -x
-          OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          az containerapp update \
-            --name finance-app-llmprocessor \
-            --resource-group projects \
-            --image ghcr.io/$OWNER/finance-app-llmprocessor:${GITHUB_RUN_NUMBER} \
-            --set-env-vars \
-              OPENAI_API_KEY='${{ secrets.OPENAI_API_KEY }}' \
-              RABBITMQ_HOST='${{ vars.RABBITMQ_HOST }}' \
-              RABBITMQ_PORT='${{ vars.RABBITMQ_PORT }}' \
-              RABBITMQ_VHOST='${{ vars.RABBITMQ_VHOST }}' \
-              RABBITMQ_USER='${{ secrets.RABBITMQ_USER }}' \
-              RABBITMQ_PASS='${{ secrets.RABBITMQ_PASS }}' \
-              API_TOKEN='${{ secrets.API_TOKEN }}' \
-              MCP_API_BASE_URL='${{ vars.MCP_API_BASE_URL }}' \
-              CONNECTION_STRING='${{ secrets.CONNECTION_STRING }}' \
