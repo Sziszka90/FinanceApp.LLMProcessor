@@ -13,43 +13,19 @@ on:
         default: "production"
 
 jobs:
-  build:
+  build-and-push:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Log in to GitHub Container Registry (PAT)
+        run: echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
       - name: Build Docker image
         run: |
           OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           docker build -t ghcr.io/$OWNER/finance-app-llmprocessor:${GITHUB_RUN_NUMBER} -f ./LLMProcessor.Dockerfile .
-
-      - name: Save Docker image
-        run: |
-          OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          docker save ghcr.io/$OWNER/finance-app-llmprocessor:${GITHUB_RUN_NUMBER} -o llmprocessor-image.tar
-
-      - name: Upload Docker image artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: docker-image
-          path: llmprocessor-image.tar
-          retention-days: 1
-
-  push:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Download Docker image artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: docker-image
-
-      - name: Load Docker image
-        run: docker load -i llmprocessor-image.tar
-
-      - name: Log in to GitHub Container Registry (PAT)
-        run: echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Push Docker image
         run: |
