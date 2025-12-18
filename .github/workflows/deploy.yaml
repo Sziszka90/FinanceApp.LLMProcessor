@@ -11,6 +11,10 @@ on:
         description: "Target environment"
         required: true
         default: "production"
+      image_tag:
+        description: "Docker image tag"
+        required: false
+        default: "latest"
 
 jobs:
   build-and-push:
@@ -25,9 +29,11 @@ jobs:
       - name: Build Docker image
         run: |
           OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          docker build -t ghcr.io/$OWNER/finance-app-llmprocessor:${GITHUB_RUN_NUMBER} -f ./LLMProcessor.Dockerfile .
+          TAG="${{ github.event.inputs.image_tag || 'latest' }}"
+          docker build -t ghcr.io/$OWNER/finance-app-llmprocessor:$TAG -f ./LLMProcessor.Dockerfile .
 
       - name: Push Docker image
         run: |
           OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          docker push ghcr.io/$OWNER/finance-app-llmprocessor:${GITHUB_RUN_NUMBER}
+          TAG="${{ github.event.inputs.image_tag || 'latest' }}"
+          docker push ghcr.io/$OWNER/finance-app-llmprocessor:$TAG
