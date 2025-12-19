@@ -37,3 +37,11 @@ jobs:
           OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           TAG="${{ github.event.inputs.image_tag || 'latest' }}"
           docker push ghcr.io/$OWNER/finance-app-llmprocessor:$TAG
+   
+      - name: Trigger Infrastructure Deployment
+        run: |
+          gh workflow run deploy.yml \
+            -R Sziszka90/FinanceApp.Infrastructure.Azure \
+            --ref main
+        env:
+          GH_TOKEN: ${{ secrets.GHCR_PAT }}
