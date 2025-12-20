@@ -30,7 +30,18 @@ def parse_connection_string(conn_str: str) -> str:
     
     server = params.get('Server')
     logger.info(f"Server value from params: {server}")
-    host, port = (server.split(',') + ['1433'])[:2]
+    
+    # Remove 'tcp:' prefix if present
+    if server.startswith('tcp:'):
+        server = server[4:]
+    
+    # Handle both comma and colon as separators
+    if ',' in server:
+        host, port = (server.split(',') + ['1433'])[:2]
+    elif ':' in server:
+        host, port = (server.split(':') + ['1433'])[:2]
+    else:
+        host, port = server, '1433'
     
     database = params.get('Database')
     user = params.get('User')
