@@ -1,0 +1,26 @@
+[project]
+name = "finance-app-llm-processor"
+version = "0.1.0"
+description = "LLM processor for the Finance App"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+  "aio-pika",
+  "aioodbc",
+  "azure-identity",
+  "azure-keyvault-secrets",
+  "fastapi",
+  "httpx[socks]",
+  "langchain",
+  "langchain-core",
+  "langchain-openai",
+  "langgraph",
+  "openai",
+  "pyodbc",
+  "python-dotenv",
+  "requests",
+  "sqlalchemy[asyncio]",
+  "uvicorn",
+]
+
+[tool.uv]
+package = false

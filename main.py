@@ -1,3 +1,7 @@
+from config.settings import load_environment
+
+load_environment()
+
 from fastapi.responses import JSONResponse
 from fastapi import BackgroundTasks, Depends, FastAPI
 from fastapi.concurrency import asynccontextmanager

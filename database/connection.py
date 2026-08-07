@@ -19,8 +19,6 @@ def parse_connection_string(conn_str: str) -> str:
     # Strip quotes from the entire connection string first
     conn_str = conn_str.strip().strip('"').strip("'")
     
-    logger.info(f"Raw connection string: {conn_str}")
-    
     params = {}
     for part in conn_str.split(';'):
         if '=' in part:

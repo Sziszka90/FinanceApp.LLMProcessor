@@ -1,14 +1,16 @@
 FROM python:3.11-slim
 
+COPY --from=ghcr.io/astral-sh/uv:0.8.13 /uv /uvx /bin/
+
 WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-        curl \
-        gnupg2 \
-        unixodbc \
-        unixodbc-dev \
-        locales \
+    curl \
+    gnupg2 \
+    unixodbc \
+    unixodbc-dev \
+    locales \
     && echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
     && locale-gen \
     && rm -rf /var/lib/apt/lists/*
@@ -21,12 +23,13 @@ RUN mkdir -p /etc/apt/trusted.gpg.d \
     && ACCEPT_EULA=Y apt-get install -y msodbcsql18 \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+COPY pyproject.toml uv.lock ./
+RUN uv sync --locked --no-dev
 
 COPY . .
 
 EXPOSE 8000
 ENV PYTHONUNBUFFERED=1
+ENV PATH="/app/.venv/bin:$PATH"
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]

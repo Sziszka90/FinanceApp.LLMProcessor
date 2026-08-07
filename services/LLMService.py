@@ -1,6 +1,8 @@
+import os
+
 from fastapi import BackgroundTasks
-from langchain.chat_models import init_chat_model
-from langgraph.prebuilt import create_react_agent
+from langchain_openai import AzureChatOpenAI, ChatOpenAI
+from langchain.agents import create_agent as langchain_create_agent
 from clients.abstraction.IRabbitMqClient import IRabbitMqClient
 from models.Message import Message
 from models.ChatMessage import ChatMessage, ChatMessages
@@ -25,7 +27,37 @@ class LLMService(ILLMService):
     self.logger = logger
     self.prompt_service = prompt_service
     self.matchTransactionRepository = matchTransactionRepository
-    self.llm = init_chat_model("openai:gpt-4.1")
+    self.llm = self._create_llm()
+
+  def _create_llm(self):
+    azure_environment = {
+      "AZURE_OPENAI_ENDPOINT": os.getenv("AZURE_OPENAI_ENDPOINT"),
+      "AZURE_OPENAI_DEPLOYMENT_NAME": os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"),
+      "AZURE_OPENAI_API_VERSION": os.getenv("AZURE_OPENAI_API_VERSION"),
+    }
+    missing_settings = [
+      name for name, value in azure_environment.items() if not value
+    ]
+    if missing_settings:
+      raise ValueError(
+        "Azure OpenAI configuration is required. Missing: "
+        + ", ".join(missing_settings)
+      )
+
+    api_key = os.getenv("AZURE_OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
+    if not api_key:
+      raise ValueError(
+        "Azure OpenAI requires AZURE_OPENAI_API_KEY or OPENAI_API_KEY"
+      )
+
+    endpoint = azure_environment["AZURE_OPENAI_ENDPOINT"].rstrip("/")
+
+    return ChatOpenAI(
+      base_url=endpoint,
+      api_key=api_key,
+      model=azure_environment["AZURE_OPENAI_DEPLOYMENT_NAME"],
+    )
+
 
   async def match_transactions(
       self, 
@@ -42,10 +74,10 @@ class LLMService(ILLMService):
       transaction_group_names
     )
 
-    matching_agent = create_react_agent(
+    matching_agent = langchain_create_agent(
       model=self.llm,
       tools=[],
-      prompt=matching_prompt
+      system_prompt=matching_prompt
     )
 
     message = ChatMessages(
@@ -104,10 +136,10 @@ class LLMService(ILLMService):
     try:
       mcp_prompt = self.prompt_service.get_mcp_prompt()
 
-      mcp_agent = create_react_agent(
+      mcp_agent = langchain_create_agent(
         model=self.llm,
         tools=self.tools,
-        prompt=mcp_prompt
+        system_prompt=mcp_prompt
       )
 
       messages = ChatMessages(

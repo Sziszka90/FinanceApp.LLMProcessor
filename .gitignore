@@ -2,7 +2,9 @@
 env
 __pycache__/
 .venv/
-.env
+.env.*
+!.env
+!.env.example
 *.pyc
 *.pyo
 *.pyd

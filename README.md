@@ -6,20 +6,25 @@ This is a Python-based microservice that provides intelligent transaction catego
 
 ## 🎯 Current Features
 
-✅ **AI Transaction Matching** 
-  - Uses GPT-4 to categorize bank transactions into appropriate groups
+✅ **AI Transaction Matching**
 
-✅ **Async Message Processing** 
-  - RabbitMQ integration with aio_pika for reliable message handling  
+- Uses GPT-4 to categorize bank transactions into appropriate groups
+
+✅ **Async Message Processing**
+
+- RabbitMQ integration with aio_pika for reliable message handling
 
 ✅ **Token-based Authentication**
-  - Secure API access with Bearer token validation
+
+- Secure API access with Bearer token validation
 
 ✅ **Background Task Processing**
-  - Non-blocking AI processing with FastAPI background tasks  
 
-✅ **Robust Error Handling** 
-  - Retry mechanisms and connection resilience
+- Non-blocking AI processing with FastAPI background tasks
+
+✅ **Robust Error Handling**
+
+- Retry mechanisms and connection resilience
 
 ## 🔮 Upcoming Features
 
@@ -31,7 +36,8 @@ For detailed upcoming features and development progress, please check our [GitHu
 
 ```
 main.py                                 # FastAPI application and endpoints
-requirements.txt                        # Python dependencies
+pyproject.toml                          # Python dependencies and project metadata
+uv.lock                                 # Locked dependency versions
 LLMProcessor.Dockerfile                 # Docker setup
 rabbitmq_config.json                    # Message queue configuration
 
@@ -101,6 +107,23 @@ rabbitmq_config.json                    # Message queue configuration
 
 - **OpenAI GPT-4** - Advanced language model for intelligent transaction categorization
 
+## Python Environment
+
+This project uses `uv` for dependency management. Install the locked environment with:
+
+```bash
+uv sync
+```
+
+Run the service or the Azure OpenAI test script through the managed environment:
+
+```bash
+uv run uvicorn main:app --host 0.0.0.0 --port 8000
+uv run python tasks/test_azure_openai.py
+```
+
+After changing dependencies, update the lockfile with `uv lock` and commit both `pyproject.toml` and `uv.lock`.
+
 ## 📋 API Documentation
 
 ```http
@@ -121,6 +144,42 @@ The application is deployed as **containerized microservices** on **Azure Contai
 2. **Bundle** → Creates production build
 3. **Deploy** → Updates hosting platform with new version
 4. **Verify** → Automated health checks ensure successful deployment
+
+### Configuration and secrets
+
+The committed `.env` contains only `KEY_VAULT_URI`. The ignored `.env.local` is loaded afterwards and can contain local secret values. Set `KEY_VAULT_URI=` in `.env.local` to disable Key Vault for local development and use those local values instead.
+
+In deployed containers, `.env.local` is absent, so the URI from `.env` enables Key Vault. Key Vault values override the shared environment values, and a Key Vault error stops application initialization instead of using a local fallback.
+
+The service authenticates with `DefaultAzureCredential`, so local development can use an authenticated Azure CLI/developer session and Azure Container Apps can use a managed identity. Grant the runtime identity the **Key Vault Secrets User** role on the vault.
+
+To use an Azure OpenAI custom deployment, configure these non-secret environment variables:
+
+```env
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+AZURE_OPENAI_DEPLOYMENT_NAME=your-custom-deployment-name
+AZURE_OPENAI_API_VERSION=2024-10-21
+```
+
+`AZURE_OPENAI_DEPLOYMENT_NAME` is the deployment name created in Azure OpenAI; it is not necessarily the underlying model name. The service requires all three variables, creates `AzureChatOpenAI`, and passes it to LangGraph. The existing `OPENAI_API_KEY` value from local configuration or Key Vault is used as the Azure OpenAI API key. There is no public OpenAI fallback.
+
+Key Vault secret names are mapped to the environment variables already used by the service:
+
+| Key Vault secret                   | Environment variable       |
+| ---------------------------------- | -------------------------- |
+| `cache-connection-string`          | `CACHE_CONNECTION_STRING`  |
+| `exchange-rate-api-app-id`         | `EXCHANGE_RATE_API_APP_ID` |
+| `finance-app-db-connection-string` | `CONNECTION_STRING`        |
+| `local-db`                         | `LOCAL_DB`                 |
+| `llm-processor-api-token`          | `API_TOKEN`                |
+| `openai-api-key`                   | `OPENAI_API_KEY`           |
+| `rabbitmq-password`                | `RABBITMQ_PASS`            |
+| `redis-password`                   | `REDIS_PASSWORD`           |
+| `registry-password`                | `REGISTRY_PASSWORD`        |
+| `smtp-password`                    | `SMTP_PASSWORD`            |
+| `auth-secret-key`                  | `AUTH_SECRET_KEY`          |
+
+Copy `.env.example` to `.env.local` to create the local variable template. Docker includes the non-secret `.env` and excludes `.env.local` from the build context.
 
 ## 🤝 Contributing
 
