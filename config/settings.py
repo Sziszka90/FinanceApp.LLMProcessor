@@ -14,7 +14,6 @@ SECRET_ENVIRONMENT_MAPPING: Final = {
   "cache-connection-string": "CACHE_CONNECTION_STRING",
   "exchange-rate-api-app-id": "EXCHANGE_RATE_API_APP_ID",
   "finance-app-db-connection-string": "CONNECTION_STRING",
-  "local-db": "LOCAL_DB",
   "llm-processor-api-token": "API_TOKEN",
   "openai-api-key": "OPENAI_API_KEY",
   "rabbitmq-password": "RABBITMQ_PASS",
