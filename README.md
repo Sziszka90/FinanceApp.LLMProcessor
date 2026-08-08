@@ -147,11 +147,11 @@ The application is deployed as **containerized microservices** on **Azure Contai
 
 ### Configuration and secrets
 
-The committed `.env` contains only `KEY_VAULT_URI`. The ignored `.env.local` is loaded afterwards and can contain local secret values. Set `KEY_VAULT_URI=` in `.env.local` to disable Key Vault for local development and use those local values instead.
+The committed `.env` contains the shared Key Vault URI. The ignored `.env.local` is loaded afterwards and can contain local secret values. Set `KEY_VAULT_URI=` in `.env.local` to disable Key Vault for local development and use those local values instead.
 
-In deployed containers, `.env.local` is absent, so the URI from `.env` enables Key Vault. Key Vault values override the shared environment values, and a Key Vault error stops application initialization instead of using a local fallback.
+In deployed containers, `.env.local` is absent, so the URI from `.env` enables Key Vault. Key Vault values override existing environment values, and a Key Vault error stops application initialization instead of using a local fallback.
 
-The service authenticates with `DefaultAzureCredential`, so local development can use an authenticated Azure CLI/developer session and Azure Container Apps can use a managed identity. Grant the runtime identity the **Key Vault Secrets User** role on the vault.
+The service authenticates with `DefaultAzureCredential`. Local development can use an authenticated Azure CLI/developer session. Azure Container Apps must have a system-assigned or user-assigned managed identity, and that identity must have the **Key Vault Secrets User** role on the vault. The Container App infrastructure must also preserve `KEY_VAULT_URI` as a runtime setting or include this shared `.env` in the image.
 
 To use an Azure OpenAI custom deployment, configure these non-secret environment variables:
 
