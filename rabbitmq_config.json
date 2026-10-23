@@ -1,0 +1,10 @@
+{
+  "RabbitMqSettings": {
+    "RequestQueue": "financeapp.transactions.match.requests",
+    "ResultQueue": "financeapp.transactions.match.results",
+    "DeadLetterQueue": "financeapp.transactions.match.requests.dead",
+    "PdfRequestQueue": "financeapp.transactions.pdf.requests",
+    "PdfResultQueue": "financeapp.transactions.pdf.results",
+    "PdfDeadLetterQueue": "financeapp.transactions.pdf.requests.dead"
+  }
+}

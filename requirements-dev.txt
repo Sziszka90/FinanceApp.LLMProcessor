@@ -1,0 +1,5 @@
+# Tooling versions used by local development and CI.
+mypy==1.18.2
+pytest==8.4.2
+pytest-asyncio==1.2.0
+ruff==0.14.4

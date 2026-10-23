@@ -1,0 +1,13 @@
+.env.*
+!.env.example
+.git
+.gitignore
+.venv
+__pycache__
+logs
+*.pyc
+*.pyo
+*.pyd
+tests
+requirements-dev.txt
+.env.example

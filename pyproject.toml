@@ -1,0 +1,44 @@
+[project]
+name = "finance-app-llm-processor"
+version = "0.1.0"
+description = "LLM processor for the Finance App"
+requires-python = ">=3.11,<3.16"
+dependencies = [
+  "aio-pika",
+  "azure-identity",
+  "azure-keyvault-secrets",
+  "fastapi",
+  "httpx[socks]",
+  "langchain",
+  "langchain-core",
+  "langchain-openai",
+  "langgraph",
+  "openai",
+  "requests",
+  "uvicorn",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["database/connection.py", "models"]
+ignore_missing_imports = true
+check_untyped_defs = true
+warn_unused_ignores = true
+namespace_packages = true
+explicit_package_bases = true
+mypy_path = "."
+show_error_codes = true

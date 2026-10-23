@@ -1,0 +1,80 @@
+name: Python checks and deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: true
+        default: production
+      image_tag:
+        description: Image tag to deploy
+        required: false
+        default: latest
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.15"
+      - name: Install locked dependencies
+        run: |
+          uv sync --locked
+          uv pip install --python .venv/bin/python -r requirements-dev.txt
+      - name: Lint
+        run: uv run --no-sync ruff check .
+      - name: Type check models and database setup
+        run: uv run --no-sync mypy
+      - name: Run tests
+        run: uv run --no-sync pytest
+
+  build-and-deploy:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build container image
+        env:
+          IMAGE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.image_tag || github.sha }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          owner="$(printf '%s' "$OWNER" | tr '[:upper:]' '[:lower:]')"
+          docker build -t "ghcr.io/$owner/finance-app-llmprocessor:$IMAGE_TAG" -f ./LLMProcessor.Dockerfile .
+      - name: Log in to GitHub Container Registry
+        env:
+          GHCR_PAT: ${{ secrets.GHCR_PAT }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          printf '%s' "$GHCR_PAT" | docker login ghcr.io -u "$OWNER" --password-stdin
+      - name: Push container image
+        env:
+          IMAGE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.image_tag || github.sha }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          owner="$(printf '%s' "$OWNER" | tr '[:upper:]' '[:lower:]')"
+          docker push "ghcr.io/$owner/finance-app-llmprocessor:$IMAGE_TAG"
+      - name: Trigger infrastructure deployment
+        env:
+          GH_TOKEN: ${{ secrets.GHCR_PAT }}
+          DEPLOY_ENVIRONMENT: ${{ inputs.environment || 'production' }}
+          IMAGE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.image_tag || github.sha }}
+        run: |
+          gh workflow run deploy.yml \
+            -R Sziszka90/FinanceApp.Infrastructure.Azure \
+            --ref main \
+            -f environment="$DEPLOY_ENVIRONMENT" \
+            -f image_tag="$IMAGE_TAG"
