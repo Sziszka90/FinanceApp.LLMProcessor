@@ -35,11 +35,11 @@ Start the service with the local environment file explicitly loaded:
 uv run --env-file .env.local --no-sync uvicorn main:app --host 127.0.0.1 --port 8000
 ```
 
-In deployed containers, the platform supplies environment values; the service does not load dotenv files. If `KEY_VAULT_URI` is supplied, Key Vault is loaded using `DefaultAzureCredential`, and the Container App identity needs the **Key Vault Secrets User** role. Explicit process environment values take priority over matching Key Vault secrets.
+The production image includes the tracked `.env.production` file for non-secret settings and loads it when the container starts. Secrets are read from Azure Key Vault using `DefaultAzureCredential`; the Container App's managed identity needs the **Key Vault Secrets User** role. Azure supplies `AZURE_CLIENT_ID` so the SDK selects the user-assigned identity.
 
 ## Configuration
 
-Configuration is parsed once at startup into a typed settings object. Copy `.env.example` to `.env.local` for local settings; `.env.local` is ignored by Git and Docker.
+Configuration is parsed once at startup into a typed settings object. Local development uses the ignored `.env.local`; the production image uses the non-secret, tracked `.env.production`.
 
 The OpenAI key is read from `AZURE_OPENAI_API_KEY` or `OPENAI_API_KEY`. Set `AZURE_OPENAI_PDF_DEPLOYMENT_NAME` when PDF extraction uses a different vision capable deployment; otherwise it uses `AZURE_OPENAI_DEPLOYMENT_NAME`. Key Vault secret names map to application environment variables:
 
