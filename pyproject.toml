@@ -2,7 +2,7 @@
 name = "finance-app-llm-processor"
 version = "0.1.0"
 description = "LLM processor for the Finance App"
-requires-python = ">=3.11,<3.16"
+requires-python = ">=3.11,<3.15"
 dependencies = [
   "aio-pika",
   "azure-identity",
@@ -34,7 +34,7 @@ select = ["E4", "E7", "E9", "F"]
 
 [tool.mypy]
 python_version = "3.11"
-files = ["database/connection.py", "models"]
+files = ["models"]
 ignore_missing_imports = true
 check_untyped_defs = true
 warn_unused_ignores = true
