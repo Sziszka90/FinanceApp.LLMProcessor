@@ -85,6 +85,12 @@ class PdfImportJobHandler:
         async with message.process(requeue=True):
             result_queue = self.rabbitmq_client.rabbitmq_config.RabbitMqSettings.PdfResultQueue
             try:
+                await self.rabbitmq_client.publish_to_queue_async(result_queue, {
+                    "correlation_id": job.correlation_id,
+                    "user_id": job.user_id,
+                    "status": "processing",
+                })
+
                 pdf = base64.b64decode(job.pdf_base64, validate=True)
                 if len(pdf) > 10 * 1024 * 1024 or not pdf.startswith(b"%PDF-"):
                     raise ValueError("Invalid PDF document")
