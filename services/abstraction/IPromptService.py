@@ -6,6 +6,7 @@ class IPromptService(ABC):
     self,
     transaction_names: list[str],
     transaction_group_names: list[str],
+    categorization_rules: list[dict[str, str]] | None = None,
   ) -> str:
     """
     Get a prompt for matching transactions.

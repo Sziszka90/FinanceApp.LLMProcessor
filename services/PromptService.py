@@ -34,6 +34,7 @@ class PromptService(IPromptService):
     self,
     transaction_names: list[str],
     transaction_group_names: list[str],
+    categorization_rules: list[dict[str, str]] | None = None,
   ) -> str:
     parser = PydanticOutputParser(pydantic_object=MatchTransactionResponse)
     return (
@@ -53,6 +54,12 @@ class PromptService(IPromptService):
 
       Transaction names (JSON): {json.dumps(transaction_names, ensure_ascii=False)}
       Available group names (JSON): {json.dumps(transaction_group_names, ensure_ascii=False)}
+      User categorization rules (JSON): {json.dumps(categorization_rules or [], ensure_ascii=False)}
+
+      Apply user rules before making your own choice. If a transaction name contains a rule's merchant_text,
+      ignoring letter case, assign the exact transaction_group_name from that rule. When more than one rule
+      matches, apply the rule with the longest merchant_text. Rules are user preferences and override your
+      general merchant knowledge.
 
       Return exactly one group for every transaction, using the transaction name as the key and an existing
       group name as the value. Respond in this format: {parser.get_format_instructions()}

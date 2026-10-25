@@ -1,6 +1,7 @@
 import base64
 import logging
 from decimal import Decimal
+from typing import Any
 
 from aio_pika.abc import AbstractIncomingMessage
 from openai import AsyncOpenAI
@@ -14,6 +15,9 @@ from services.abstraction.IPromptService import IPromptService
 
 NULLABLE_DECIMAL = {"anyOf": [{"type": "string"}, {"type": "null"}]}
 NULLABLE_STRING = {"anyOf": [{"type": "string"}, {"type": "null"}]}
+PDF_RETRY_COUNT_HEADER = "x-financeapp-pdf-processing-retries"
+MAX_PDF_PROCESSING_RETRIES = 3
+
 STATEMENT_SCHEMA = {
     "type": "object",
     "properties": {
@@ -82,8 +86,10 @@ class PdfImportJobHandler:
             await message.reject(requeue=False)
             return
 
-        async with message.process(requeue=True):
+        async with message.process(requeue=False):
             result_queue = self.rabbitmq_client.rabbitmq_config.RabbitMqSettings.PdfResultQueue
+            retry_queue = f"{self.rabbitmq_client.rabbitmq_config.RabbitMqSettings.PdfRequestQueue}.retry"
+            retry_count = self._get_retry_count(message.headers)
             try:
                 await self.rabbitmq_client.publish_to_queue_async(result_queue, {
                     "correlation_id": job.correlation_id,
@@ -114,10 +120,10 @@ class PdfImportJobHandler:
                             "content": [
                                 {"type": "input_file", "filename": "statement.pdf",
                                  "file_data": "data:application/pdf;base64," + job.pdf_base64},
-                                 {
-                                     "type": "input_text",
-                                     "text": self.prompt_service.get_pdf_import_user_prompt(job.prompt),
-                                 },
+                                {
+                                    "type": "input_text",
+                                    "text": self.prompt_service.get_pdf_import_user_prompt(job.prompt),
+                                },
                             ],
                         }],
                         text={"format": {"type": "json_schema", "name": "bank_statement",
@@ -134,11 +140,32 @@ class PdfImportJobHandler:
                 self.logger.info("Extracted %s transactions for PDF import %s",
                                  len(statement.transactions), job.correlation_id)
             except Exception as error:
-                self.logger.error("PDF extraction failed for %s (%s): %s",
-                                  job.correlation_id, type(error).__name__, error)
+                self.logger.error("PDF extraction failed for %s (attempt %s/%s, %s): %s",
+                                  job.correlation_id, retry_count + 1, MAX_PDF_PROCESSING_RETRIES + 1,
+                                  type(error).__name__, error)
+                if retry_count < MAX_PDF_PROCESSING_RETRIES:
+                    await self.rabbitmq_client.publish_to_queue_async(
+                        retry_queue,
+                        job.model_dump(mode="json"),
+                        headers={PDF_RETRY_COUNT_HEADER: retry_count + 1},
+                    )
+                    self.logger.info("Scheduled automatic PDF retry %s/%s for %s",
+                                     retry_count + 1, MAX_PDF_PROCESSING_RETRIES, job.correlation_id)
+                    return
+
                 await self.rabbitmq_client.publish_to_queue_async(result_queue, {
                     "correlation_id": job.correlation_id,
                     "user_id": job.user_id,
                     "success": False,
-                    "error": "PDF extraction failed. Check the document and model configuration.",
+                    "error": "PDF extraction failed after 3 automatic retries. Check the PDF and model configuration.",
                 })
+
+    @staticmethod
+    def _get_retry_count(headers: dict[str, Any] | None) -> int:
+        if not headers:
+            return 0
+        value = headers.get(PDF_RETRY_COUNT_HEADER, 0)
+        try:
+            return max(0, int(value))
+        except (TypeError, ValueError):
+            return 0

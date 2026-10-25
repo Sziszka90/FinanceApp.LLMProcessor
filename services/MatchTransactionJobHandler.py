@@ -34,5 +34,6 @@ class MatchTransactionJobHandler:
                 correlation_id=job.correlation_id,
                 transaction_names=job.transaction_names,
                 transaction_group_names=job.transaction_group_names,
+                categorization_rules=[rule.model_dump() for rule in job.categorization_rules],
                 user_id=job.user_id,
             )

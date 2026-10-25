@@ -45,11 +45,13 @@ class RabbitMqClient(IRabbitMqClient):
                 self.channel = await self.connection.channel()
 
                 rabbitmq_settings = self.rabbitmq_config.RabbitMqSettings
+                pdf_request_retry_queue = f"{rabbitmq_settings.PdfRequestQueue}.retry"
                 queue_names = (
                     rabbitmq_settings.RequestQueue,
                     rabbitmq_settings.ResultQueue,
                     rabbitmq_settings.DeadLetterQueue,
                     rabbitmq_settings.PdfRequestQueue,
+                    pdf_request_retry_queue,
                     rabbitmq_settings.PdfResultQueue,
                     rabbitmq_settings.PdfDeadLetterQueue,
                 )
@@ -64,6 +66,12 @@ class RabbitMqClient(IRabbitMqClient):
                         arguments = {
                             "x-dead-letter-exchange": "",
                             "x-dead-letter-routing-key": rabbitmq_settings.PdfDeadLetterQueue,
+                        }
+                    elif queue_name == pdf_request_retry_queue:
+                        arguments = {
+                            "x-message-ttl": 10000,
+                            "x-dead-letter-exchange": "",
+                            "x-dead-letter-routing-key": rabbitmq_settings.PdfRequestQueue,
                         }
                     await self.channel.declare_queue(
                         queue_name,
@@ -93,6 +101,7 @@ class RabbitMqClient(IRabbitMqClient):
         message: dict[str, Any],
         max_retries: int = 3,
         base_wait: int = 5,
+        headers: dict[str, Any] | None = None,
     ) -> None:
         for attempt in range(1, max_retries + 1):
             try:
@@ -101,6 +110,7 @@ class RabbitMqClient(IRabbitMqClient):
                     aio_pika.Message(
                         body=json.dumps(message).encode(),
                         delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
+                        headers=headers,
                     ),
                     routing_key=queue_name,
                 )

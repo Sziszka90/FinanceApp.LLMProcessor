@@ -62,12 +62,14 @@ class LLMService(ILLMService):
       transaction_names: list[str],
       transaction_group_names: list[str],
       user_id: str,
+      categorization_rules: list[dict[str, str]] | None = None,
     ) -> None:
     matching_prompt = ""
     try:
       matching_prompt = self.prompt_service.get_matched_transactions_prompt(
         transaction_names,
         transaction_group_names,
+        categorization_rules,
       )
 
       matching_agent = langchain_create_agent(

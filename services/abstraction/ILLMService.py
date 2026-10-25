@@ -7,6 +7,7 @@ class ILLMService(ABC):
 		transaction_names: list[str],
 		transaction_group_names: list[str],
 		user_id: str,
+		categorization_rules: list[dict[str, str]] | None = None,
 	) -> None:
 		"""
 		Match transactions to groups and publish the mapping to RabbitMQ.

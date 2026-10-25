@@ -12,7 +12,14 @@ class IRabbitMqClient(ABC):
     pass
 
   @abstractmethod
-  async def publish_to_queue_async(self, queue_name: str, message: dict, max_retries: int = 3, base_wait: int = 5):
+  async def publish_to_queue_async(
+    self,
+    queue_name: str,
+    message: dict,
+    max_retries: int = 3,
+    base_wait: int = 5,
+    headers: dict[str, Any] | None = None,
+  ):
     """
     Publishes a message to the specified RabbitMQ exchange and routing key.
     """
