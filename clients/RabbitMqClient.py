@@ -46,10 +46,14 @@ class RabbitMqClient(IRabbitMqClient):
 
                 rabbitmq_settings = self.rabbitmq_config.RabbitMqSettings
                 pdf_request_retry_queue = f"{rabbitmq_settings.PdfRequestQueue}.retry"
+                match_result_retry_queue = f"{rabbitmq_settings.ResultQueue}.retry"
+                match_result_dead_letter_queue = f"{rabbitmq_settings.ResultQueue}.dead"
                 queue_names = (
                     rabbitmq_settings.RequestQueue,
                     rabbitmq_settings.ResultQueue,
                     rabbitmq_settings.DeadLetterQueue,
+                    match_result_retry_queue,
+                    match_result_dead_letter_queue,
                     rabbitmq_settings.PdfRequestQueue,
                     pdf_request_retry_queue,
                     rabbitmq_settings.PdfResultQueue,
@@ -72,6 +76,12 @@ class RabbitMqClient(IRabbitMqClient):
                             "x-message-ttl": 10000,
                             "x-dead-letter-exchange": "",
                             "x-dead-letter-routing-key": rabbitmq_settings.PdfRequestQueue,
+                        }
+                    elif queue_name == match_result_retry_queue:
+                        arguments = {
+                            "x-message-ttl": 10000,
+                            "x-dead-letter-exchange": "",
+                            "x-dead-letter-routing-key": rabbitmq_settings.ResultQueue,
                         }
                     await self.channel.declare_queue(
                         queue_name,
